@@ -1,4 +1,5 @@
 
+import { cn } from '@/lib/utils';
 import { Progress } from './ui/progress';
 
 const ImpactSection = () => {
@@ -17,7 +18,10 @@ const ImpactSection = () => {
                 <span className="font-medium text-connect-dark">Environment</span>
                 <span className="text-sm text-gray-500">78%</span>
               </div>
-              <Progress value={78} className="h-2 bg-gray-200" indicatorClassName="bg-green-500" />
+              <div className="relative">
+                <Progress value={78} className="h-2 bg-gray-200" />
+                <div className="absolute inset-0 bg-green-500 rounded-full" style={{ width: '78%', height: '100%' }}></div>
+              </div>
               <p className="text-sm text-gray-600">15,230 volunteers participated in environmental initiatives</p>
             </div>
             
@@ -26,7 +30,10 @@ const ImpactSection = () => {
                 <span className="font-medium text-connect-dark">Education</span>
                 <span className="text-sm text-gray-500">65%</span>
               </div>
-              <Progress value={65} className="h-2 bg-gray-200" indicatorClassName="bg-blue-500" />
+              <div className="relative">
+                <Progress value={65} className="h-2 bg-gray-200" />
+                <div className="absolute inset-0 bg-blue-500 rounded-full" style={{ width: '65%', height: '100%' }}></div>
+              </div>
               <p className="text-sm text-gray-600">8,120 students have received educational support</p>
             </div>
             
@@ -35,7 +42,10 @@ const ImpactSection = () => {
                 <span className="font-medium text-connect-dark">Community</span>
                 <span className="text-sm text-gray-500">92%</span>
               </div>
-              <Progress value={92} className="h-2 bg-gray-200" indicatorClassName="bg-purple-500" />
+              <div className="relative">
+                <Progress value={92} className="h-2 bg-gray-200" />
+                <div className="absolute inset-0 bg-purple-500 rounded-full" style={{ width: '92%', height: '100%' }}></div>
+              </div>
               <p className="text-sm text-gray-600">23,450 community members impacted by local initiatives</p>
             </div>
             
@@ -44,7 +54,10 @@ const ImpactSection = () => {
                 <span className="font-medium text-connect-dark">Healthcare</span>
                 <span className="text-sm text-gray-500">45%</span>
               </div>
-              <Progress value={45} className="h-2 bg-gray-200" indicatorClassName="bg-red-500" />
+              <div className="relative">
+                <Progress value={45} className="h-2 bg-gray-200" />
+                <div className="absolute inset-0 bg-red-500 rounded-full" style={{ width: '45%', height: '100%' }}></div>
+              </div>
               <p className="text-sm text-gray-600">5,670 people received free health checkups and treatments</p>
             </div>
           </div>
