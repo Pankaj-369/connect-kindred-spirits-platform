@@ -1,11 +1,20 @@
 
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Button } from './ui/button';
-import { Bell, Heart, Menu, Search, User, X } from 'lucide-react';
+import { Bell, Heart, Menu, Search, User, X, LogOut } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
+import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 
 const Navigation = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const { isAuthenticated, profile, signOut } = useAuth();
+  const navigate = useNavigate();
+
+  const handleSignOut = async () => {
+    await signOut();
+    navigate('/');
+  };
 
   return (
     <nav className="bg-white shadow-sm sticky top-0 z-50">
@@ -47,13 +56,34 @@ const Navigation = () => {
               <Heart className="h-5 w-5" />
             </Button>
             
-            <Link to="/login">
-              <Button variant="ghost" className="font-medium">Login</Button>
-            </Link>
-            
-            <Link to="/register">
-              <Button className="bg-connect-primary hover:bg-connect-primary/90 text-white font-medium">Join Us</Button>
-            </Link>
+            {isAuthenticated ? (
+              <div className="flex items-center gap-2">
+                <Link to="/profile">
+                  <Button variant="ghost" className="flex items-center gap-2">
+                    <Avatar className="h-8 w-8">
+                      <AvatarImage src={profile?.avatar_url || undefined} />
+                      <AvatarFallback>{profile?.username?.slice(0, 2).toUpperCase() || "U"}</AvatarFallback>
+                    </Avatar>
+                    <span className="font-medium hidden lg:inline">
+                      {profile?.is_ngo ? profile.ngo_name : profile?.full_name || profile?.username || "Profile"}
+                    </span>
+                  </Button>
+                </Link>
+                <Button variant="ghost" size="icon" onClick={handleSignOut} title="Sign Out">
+                  <LogOut className="h-5 w-5" />
+                </Button>
+              </div>
+            ) : (
+              <>
+                <Link to="/auth">
+                  <Button variant="ghost" className="font-medium">Login</Button>
+                </Link>
+                
+                <Link to="/auth">
+                  <Button className="bg-connect-primary hover:bg-connect-primary/90 text-white font-medium">Join Us</Button>
+                </Link>
+              </>
+            )}
           </div>
 
           <div className="flex md:hidden">
@@ -74,13 +104,34 @@ const Navigation = () => {
             <Link to="/campaigns" className="px-2 py-1 hover:bg-gray-100 rounded-md">Campaigns</Link>
             <Link to="/about" className="px-2 py-1 hover:bg-gray-100 rounded-md">About</Link>
             
-            <div className="pt-2 border-t border-gray-200 flex space-x-2">
-              <Link to="/login" className="flex-1">
-                <Button variant="outline" className="w-full font-medium">Login</Button>
-              </Link>
-              <Link to="/register" className="flex-1">
-                <Button className="w-full font-medium bg-connect-primary">Join Us</Button>
-              </Link>
+            <div className="pt-2 border-t border-gray-200">
+              {isAuthenticated ? (
+                <>
+                  <Link to="/profile" className="flex items-center px-2 py-1 hover:bg-gray-100 rounded-md">
+                    <Avatar className="h-6 w-6 mr-2">
+                      <AvatarImage src={profile?.avatar_url || undefined} />
+                      <AvatarFallback>{profile?.username?.slice(0, 2).toUpperCase() || "U"}</AvatarFallback>
+                    </Avatar>
+                    <span>Profile</span>
+                  </Link>
+                  <button 
+                    onClick={handleSignOut}
+                    className="w-full mt-2 flex items-center px-2 py-1 hover:bg-gray-100 rounded-md"
+                  >
+                    <LogOut className="h-4 w-4 mr-2" />
+                    <span>Sign Out</span>
+                  </button>
+                </>
+              ) : (
+                <div className="flex space-x-2">
+                  <Link to="/auth" className="flex-1">
+                    <Button variant="outline" className="w-full font-medium">Login</Button>
+                  </Link>
+                  <Link to="/auth" className="flex-1">
+                    <Button className="w-full font-medium bg-connect-primary">Join Us</Button>
+                  </Link>
+                </div>
+              )}
             </div>
           </div>
         </div>
