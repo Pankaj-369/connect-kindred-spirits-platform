@@ -80,13 +80,20 @@ const Navigation = () => {
                 </Link>
                 
                 <Link to="/auth">
-                  <Button className="bg-connect-primary hover:bg-connect-primary/90 text-white font-medium">Join Us</Button>
+                  <Button className="bg-connect-primary hover:bg-connect-primary/90 text-white font-medium">Sign Up</Button>
                 </Link>
               </>
             )}
           </div>
 
           <div className="flex md:hidden">
+            {!isAuthenticated && (
+              <Link to="/auth" className="mr-4">
+                <Button size="sm" className="bg-connect-primary hover:bg-connect-primary/90 text-white font-medium">
+                  Login / Sign Up
+                </Button>
+              </Link>
+            )}
             <Button variant="ghost" size="icon" onClick={() => setIsMenuOpen(!isMenuOpen)}>
               {isMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
             </Button>
@@ -98,16 +105,16 @@ const Navigation = () => {
       {isMenuOpen && (
         <div className="md:hidden bg-white border-t p-4 animate-fade-in">
           <div className="flex flex-col space-y-3">
-            <Link to="/" className="px-2 py-1 hover:bg-gray-100 rounded-md">Home</Link>
-            <Link to="/opportunities" className="px-2 py-1 hover:bg-gray-100 rounded-md">Opportunities</Link>
-            <Link to="/ngo-list" className="px-2 py-1 hover:bg-gray-100 rounded-md">NGO List</Link>
-            <Link to="/campaigns" className="px-2 py-1 hover:bg-gray-100 rounded-md">Campaigns</Link>
-            <Link to="/about" className="px-2 py-1 hover:bg-gray-100 rounded-md">About</Link>
+            <Link to="/" className="px-2 py-1 hover:bg-gray-100 rounded-md" onClick={() => setIsMenuOpen(false)}>Home</Link>
+            <Link to="/opportunities" className="px-2 py-1 hover:bg-gray-100 rounded-md" onClick={() => setIsMenuOpen(false)}>Opportunities</Link>
+            <Link to="/ngo-list" className="px-2 py-1 hover:bg-gray-100 rounded-md" onClick={() => setIsMenuOpen(false)}>NGO List</Link>
+            <Link to="/campaigns" className="px-2 py-1 hover:bg-gray-100 rounded-md" onClick={() => setIsMenuOpen(false)}>Campaigns</Link>
+            <Link to="/about" className="px-2 py-1 hover:bg-gray-100 rounded-md" onClick={() => setIsMenuOpen(false)}>About</Link>
             
             <div className="pt-2 border-t border-gray-200">
               {isAuthenticated ? (
                 <>
-                  <Link to="/profile" className="flex items-center px-2 py-1 hover:bg-gray-100 rounded-md">
+                  <Link to="/profile" className="flex items-center px-2 py-1 hover:bg-gray-100 rounded-md" onClick={() => setIsMenuOpen(false)}>
                     <Avatar className="h-6 w-6 mr-2">
                       <AvatarImage src={profile?.avatar_url || undefined} />
                       <AvatarFallback>{profile?.username?.slice(0, 2).toUpperCase() || "U"}</AvatarFallback>
@@ -115,7 +122,10 @@ const Navigation = () => {
                     <span>Profile</span>
                   </Link>
                   <button 
-                    onClick={handleSignOut}
+                    onClick={() => {
+                      handleSignOut();
+                      setIsMenuOpen(false);
+                    }}
                     className="w-full mt-2 flex items-center px-2 py-1 hover:bg-gray-100 rounded-md"
                   >
                     <LogOut className="h-4 w-4 mr-2" />
@@ -123,12 +133,12 @@ const Navigation = () => {
                   </button>
                 </>
               ) : (
-                <div className="flex space-x-2">
-                  <Link to="/auth" className="flex-1">
+                <div className="flex flex-col space-y-2">
+                  <Link to="/auth?tab=login" className="w-full" onClick={() => setIsMenuOpen(false)}>
                     <Button variant="outline" className="w-full font-medium">Login</Button>
                   </Link>
-                  <Link to="/auth" className="flex-1">
-                    <Button className="w-full font-medium bg-connect-primary">Join Us</Button>
+                  <Link to="/auth?tab=register" className="w-full" onClick={() => setIsMenuOpen(false)}>
+                    <Button className="w-full font-medium bg-connect-primary">Sign Up</Button>
                   </Link>
                 </div>
               )}

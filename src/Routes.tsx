@@ -1,5 +1,5 @@
 
-import { Routes as RouterRoutes, Route } from 'react-router-dom';
+import { Routes as RouterRoutes, Route, Navigate } from 'react-router-dom';
 import Index from './pages/Index';
 import Auth from './pages/Auth';
 import Profile from './pages/Profile';
@@ -10,6 +10,8 @@ const Routes = () => {
     <RouterRoutes>
       <Route path="/" element={<Index />} />
       <Route path="/auth" element={<Auth />} />
+      <Route path="/login" element={<Navigate to="/auth" />} />
+      <Route path="/register" element={<Navigate to="/auth" />} />
       <Route path="/profile" element={<Profile />} />
       <Route path="*" element={<NotFound />} />
     </RouterRoutes>
