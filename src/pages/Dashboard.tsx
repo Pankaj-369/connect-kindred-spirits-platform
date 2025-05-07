@@ -1,10 +1,10 @@
 
 import { useState } from 'react';
+import { Navigate, useNavigate } from 'react-router-dom';
 import Navigation from '@/components/Navigation';
 import RecommendedOpportunities from '@/components/RecommendedOpportunities';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useAuth } from '@/contexts/AuthContext';
-import { Redirect } from 'react-router-dom';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Calendar, MapPin, Heart, Star, BookmarkPlus } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
@@ -14,7 +14,7 @@ const Dashboard = () => {
   const [activeTab, setActiveTab] = useState('recommendations');
 
   if (!isAuthenticated) {
-    return <Redirect to="/auth" />;
+    return <Navigate to="/auth" />;
   }
 
   // Mock data for the dashboard
@@ -62,7 +62,11 @@ const Dashboard = () => {
     }
   ];
 
+  // Default interests if not available in profile
   const interests = profile?.interests || ["Environment", "Education", "Community"];
+  
+  // Default location if not available in profile
+  const userLocation = profile?.location || "Not specified";
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -89,7 +93,7 @@ const Dashboard = () => {
                     <h3 className="font-semibold text-lg">{profile?.full_name || "Volunteer"}</h3>
                     <div className="flex items-center text-sm text-muted-foreground">
                       <MapPin className="h-4 w-4 mr-1" />
-                      {profile?.location || "Not specified"}
+                      {userLocation}
                     </div>
                   </div>
                 </div>

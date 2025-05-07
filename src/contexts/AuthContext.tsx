@@ -1,4 +1,3 @@
-
 import { createContext, useContext, useEffect, useState } from "react";
 import { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
@@ -16,6 +15,8 @@ type Profile = {
   ngo_website: string | null;
   created_at: string;
   updated_at: string;
+  location?: string;
+  interests?: string[];
 };
 
 type AuthContextType = {
