@@ -1,5 +1,6 @@
 
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import Navigation from '@/components/Navigation';
 import {
@@ -13,7 +14,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Building, Users } from 'lucide-react';
-import { useToast } from '@/components/ui/use-toast';
+import { useToast } from '@/hooks/use-toast';
 
 type NGOProfile = {
   id: string;
@@ -27,6 +28,7 @@ const NGOList = () => {
   const [ngos, setNgos] = useState<NGOProfile[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchNGOs = async () => {
@@ -82,6 +84,10 @@ const NGOList = () => {
 
     fetchNGOs();
   }, [toast]);
+
+  const handleViewProfile = (id: string) => {
+    navigate(`/ngo/${id}`);
+  };
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -149,7 +155,12 @@ const NGOList = () => {
                   </p>
                 </CardContent>
                 <CardFooter>
-                  <Button className="w-full">View Profile</Button>
+                  <Button 
+                    className="w-full" 
+                    onClick={() => handleViewProfile(ngo.id)}
+                  >
+                    View Profile
+                  </Button>
                 </CardFooter>
               </Card>
             ))}

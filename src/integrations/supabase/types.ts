@@ -51,6 +51,63 @@ export type Database = {
         }
         Relationships: []
       }
+      volunteer_registrations: {
+        Row: {
+          availability: string | null
+          created_at: string
+          email: string
+          id: string
+          interest: string | null
+          name: string
+          ngo_id: string
+          phone: string | null
+          status: string
+          updated_at: string
+          volunteer_id: string
+        }
+        Insert: {
+          availability?: string | null
+          created_at?: string
+          email: string
+          id?: string
+          interest?: string | null
+          name: string
+          ngo_id: string
+          phone?: string | null
+          status?: string
+          updated_at?: string
+          volunteer_id: string
+        }
+        Update: {
+          availability?: string | null
+          created_at?: string
+          email?: string
+          id?: string
+          interest?: string | null
+          name?: string
+          ngo_id?: string
+          phone?: string | null
+          status?: string
+          updated_at?: string
+          volunteer_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "volunteer_registrations_ngo_id_fkey"
+            columns: ["ngo_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "volunteer_registrations_volunteer_id_fkey"
+            columns: ["volunteer_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never

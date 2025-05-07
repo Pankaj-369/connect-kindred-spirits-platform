@@ -6,6 +6,8 @@ import Profile from './pages/Profile';
 import NotFound from './pages/NotFound';
 import Campaigns from './pages/Campaigns';
 import NGOList from './pages/NGOList';
+import NGODetail from './pages/NGODetail';
+import VolunteerManagement from './pages/VolunteerManagement';
 import Opportunities from './pages/Opportunities';
 import About from './pages/About';
 import Dashboard from './pages/Dashboard';
@@ -21,6 +23,8 @@ const Routes = () => {
       <Route path="/dashboard" element={<Dashboard />} />
       <Route path="/campaigns" element={<Campaigns />} />
       <Route path="/ngo-list" element={<NGOList />} />
+      <Route path="/ngo/:id" element={<NGODetail />} />
+      <Route path="/volunteer-management" element={<VolunteerManagement />} />
       <Route path="/opportunities" element={<Opportunities />} />
       <Route path="/about" element={<About />} />
       <Route path="*" element={<NotFound />} />
