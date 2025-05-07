@@ -8,23 +8,41 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import Navigation from "@/components/Navigation";
+import { Badge } from "@/components/ui/badge";
+import { Check, X } from "lucide-react";
+import { Textarea } from "@/components/ui/textarea";
+
+const interestOptions = [
+  "Environment", "Education", "Healthcare", "Animal Welfare", 
+  "Arts & Culture", "Community Development", "Disaster Relief",
+  "Human Rights", "Hunger Relief", "Sports", "Technology", "Youth"
+];
 
 const Auth = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [activeTab, setActiveTab] = useState("login");
+  const [fullName, setFullName] = useState("");
+  const [selectedInterests, setSelectedInterests] = useState<string[]>([]);
+  const [location, setLocation] = useState("");
+  const [isNgo, setIsNgo] = useState(false);
+  const [ngoName, setNgoName] = useState("");
+  const [ngoDescription, setNgoDescription] = useState("");
+  const [ngoWebsite, setNgoWebsite] = useState("");
+  const [certificate, setCertificate] = useState<File | null>(null);
+  
   const { signIn, signUp, isLoading, isAuthenticated } = useAuth();
   const navigate = useNavigate();
-  const location = useLocation();
+  const loc = useLocation();
 
   // Set active tab based on URL query parameter
   useEffect(() => {
-    const params = new URLSearchParams(location.search);
+    const params = new URLSearchParams(loc.search);
     const tab = params.get('tab');
     if (tab === 'register') {
       setActiveTab('register');
     }
-  }, [location]);
+  }, [loc]);
 
   // Redirect if already authenticated
   useEffect(() => {
@@ -32,6 +50,20 @@ const Auth = () => {
       navigate("/profile");
     }
   }, [isAuthenticated, navigate]);
+
+  const handleInterestToggle = (interest: string) => {
+    setSelectedInterests(prev => 
+      prev.includes(interest)
+        ? prev.filter(i => i !== interest)
+        : [...prev, interest]
+    );
+  };
+
+  const handleCertificateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      setCertificate(e.target.files[0]);
+    }
+  };
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -46,7 +78,22 @@ const Auth = () => {
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
+      // For demonstration, we'll pass user metadata during signup
+      // In a real implementation, we would update the profile after signup
+      const metadata = {
+        full_name: fullName,
+        interests: selectedInterests,
+        location: location,
+        is_ngo: isNgo,
+        ngo_name: ngoName,
+        ngo_description: ngoDescription,
+        ngo_website: ngoWebsite,
+        // Certificate would be handled separately with file upload
+      };
+      
       await signUp(email, password);
+      // In a real implementation with Supabase, we would update the user profile
+      // or call a backend function to process the certificate
     } catch (error) {
       console.error("Register error:", error);
     }
@@ -113,6 +160,28 @@ const Auth = () => {
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="space-y-2">
+                    <Label htmlFor="account-type">Account Type</Label>
+                    <div className="flex space-x-2">
+                      <Button 
+                        type="button"
+                        variant={!isNgo ? "default" : "outline"}
+                        className={!isNgo ? "bg-connect-primary hover:bg-connect-primary/90" : ""}
+                        onClick={() => setIsNgo(false)}
+                      >
+                        Volunteer
+                      </Button>
+                      <Button 
+                        type="button"
+                        variant={isNgo ? "default" : "outline"}
+                        className={isNgo ? "bg-connect-primary hover:bg-connect-primary/90" : ""}
+                        onClick={() => setIsNgo(true)}
+                      >
+                        NGO
+                      </Button>
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-2">
                     <Label htmlFor="email">Email</Label>
                     <Input
                       id="email"
@@ -123,6 +192,7 @@ const Auth = () => {
                       required
                     />
                   </div>
+                  
                   <div className="space-y-2">
                     <Label htmlFor="password">Password</Label>
                     <Input
@@ -134,6 +204,106 @@ const Auth = () => {
                       required
                     />
                   </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="fullName">{isNgo ? "Contact Person Name" : "Full Name"}</Label>
+                    <Input
+                      id="fullName"
+                      type="text"
+                      placeholder={isNgo ? "Contact person" : "Your name"}
+                      value={fullName}
+                      onChange={(e) => setFullName(e.target.value)}
+                      required
+                    />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="location">Location</Label>
+                    <Input
+                      id="location"
+                      type="text"
+                      placeholder="City, State"
+                      value={location}
+                      onChange={(e) => setLocation(e.target.value)}
+                      required
+                    />
+                  </div>
+                  
+                  {isNgo ? (
+                    <>
+                      <div className="space-y-2">
+                        <Label htmlFor="ngoName">NGO Name</Label>
+                        <Input
+                          id="ngoName"
+                          type="text"
+                          placeholder="Organization name"
+                          value={ngoName}
+                          onChange={(e) => setNgoName(e.target.value)}
+                          required={isNgo}
+                        />
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <Label htmlFor="ngoDescription">NGO Description</Label>
+                        <Textarea
+                          id="ngoDescription"
+                          placeholder="Tell us about your organization"
+                          value={ngoDescription}
+                          onChange={(e) => setNgoDescription(e.target.value)}
+                          required={isNgo}
+                        />
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <Label htmlFor="ngoWebsite">NGO Website</Label>
+                        <Input
+                          id="ngoWebsite"
+                          type="url"
+                          placeholder="https://yourorganization.org"
+                          value={ngoWebsite}
+                          onChange={(e) => setNgoWebsite(e.target.value)}
+                        />
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <Label htmlFor="certificate">Upload 80G Certificate</Label>
+                        <Input
+                          id="certificate"
+                          type="file"
+                          accept=".pdf,.jpg,.jpeg,.png"
+                          onChange={handleCertificateChange}
+                          required={isNgo}
+                          className="cursor-pointer"
+                        />
+                        <p className="text-xs text-muted-foreground mt-1">
+                          For verification purposes. Only PDF, JPG or PNG formats.
+                        </p>
+                      </div>
+                    </>
+                  ) : (
+                    <div className="space-y-2">
+                      <Label htmlFor="interests">Your Interests</Label>
+                      <div className="flex flex-wrap gap-2 mt-2">
+                        {interestOptions.map((interest) => (
+                          <Badge
+                            key={interest}
+                            variant={selectedInterests.includes(interest) ? "default" : "outline"}
+                            className={`cursor-pointer ${
+                              selectedInterests.includes(interest) 
+                                ? "bg-connect-primary hover:bg-connect-primary/90" 
+                                : "hover:bg-gray-100"
+                            }`}
+                            onClick={() => handleInterestToggle(interest)}
+                          >
+                            {selectedInterests.includes(interest) && (
+                              <Check className="h-3 w-3 mr-1" />
+                            )}
+                            {interest}
+                          </Badge>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </CardContent>
                 <CardFooter>
                   <Button type="submit" className="w-full" disabled={isLoading}>

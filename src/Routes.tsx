@@ -8,6 +8,7 @@ import Campaigns from './pages/Campaigns';
 import NGOList from './pages/NGOList';
 import Opportunities from './pages/Opportunities';
 import About from './pages/About';
+import Dashboard from './pages/Dashboard';
 
 const Routes = () => {
   return (
@@ -15,8 +16,9 @@ const Routes = () => {
       <Route path="/" element={<Index />} />
       <Route path="/auth" element={<Auth />} />
       <Route path="/login" element={<Navigate to="/auth" />} />
-      <Route path="/register" element={<Navigate to="/auth" />} />
+      <Route path="/register" element={<Navigate to="/auth?tab=register" />} />
       <Route path="/profile" element={<Profile />} />
+      <Route path="/dashboard" element={<Dashboard />} />
       <Route path="/campaigns" element={<Campaigns />} />
       <Route path="/ngo-list" element={<NGOList />} />
       <Route path="/opportunities" element={<Opportunities />} />
