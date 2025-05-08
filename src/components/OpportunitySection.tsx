@@ -5,6 +5,7 @@ import OpportunityCard from './OpportunityCard';
 import VolunteerRegistrationForm from './VolunteerRegistrationForm';
 import { Button } from './ui/button';
 import { Search, ArrowRight } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
 
 // Sample data for opportunities
 const opportunities = [
@@ -17,7 +18,7 @@ const opportunities = [
     spots: 12,
     image: 'https://images.unsplash.com/photo-1618477461853-cf177663618e?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
     category: 'Environment',
-    organizationId: '101'
+    organizationId: '201'
   },
   {
     id: 2,
@@ -28,7 +29,7 @@ const opportunities = [
     spots: 5,
     image: 'https://images.unsplash.com/photo-1593113630400-ea4288922497?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
     category: 'Community',
-    organizationId: '102'
+    organizationId: '202'
   },
   {
     id: 3,
@@ -39,7 +40,7 @@ const opportunities = [
     spots: 8,
     image: 'https://images.unsplash.com/photo-1509062522246-3755977927d7?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
     category: 'Education',
-    organizationId: '103'
+    organizationId: '203'
   },
   {
     id: 4,
@@ -80,6 +81,7 @@ const categories = ['All', 'Environment', 'Community', 'Education', 'Animals', '
 
 const OpportunitySection = () => {
   const navigate = useNavigate();
+  const { isAuthenticated } = useAuth();
   const [activeFilter, setActiveFilter] = useState('All');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedOpportunity, setSelectedOpportunity] = useState<any | null>(null);
@@ -101,6 +103,10 @@ const OpportunitySection = () => {
   });
 
   const handleApply = (opportunity: any) => {
+    if (!isAuthenticated) {
+      navigate('/auth', { state: { returnTo: '/opportunities' } });
+      return;
+    }
     setSelectedOpportunity(opportunity);
     setIsRegistrationFormOpen(true);
   };

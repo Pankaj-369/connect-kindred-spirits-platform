@@ -8,6 +8,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Calendar, MapPin, Heart, Star, BookmarkPlus } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import NotificationCenter from '@/components/NotificationCenter';
 
 const Dashboard = () => {
   const { isAuthenticated, profile } = useAuth();
@@ -72,6 +73,11 @@ const Dashboard = () => {
     <div className="min-h-screen flex flex-col">
       <Navigation />
       <main className="flex-1 container mx-auto px-4 py-8">
+        <div className="flex justify-between items-center mb-6">
+          <h1 className="text-3xl font-bold">Dashboard</h1>
+          <NotificationCenter />
+        </div>
+        
         <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
           
           {/* Left Column - User Profile Summary */}

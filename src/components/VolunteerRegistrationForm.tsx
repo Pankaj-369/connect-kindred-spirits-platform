@@ -79,6 +79,30 @@ const VolunteerRegistrationForm = ({
     setIsSubmitting(true);
 
     try {
+      // First, check if the user is already registered with this NGO
+      const { data: existingRegistration, error: checkError } = await supabase
+        .from("volunteer_registrations")
+        .select("*")
+        .eq("volunteer_id", user.id)
+        .eq("ngo_id", ngoId)
+        .single();
+
+      if (checkError && checkError.code !== "PGRST116") {
+        // Something went wrong other than "no rows returned"
+        throw checkError;
+      }
+
+      if (existingRegistration) {
+        toast({
+          title: "Already registered",
+          description: "You have already registered with this organization",
+          variant: "destructive",
+        });
+        onClose();
+        return;
+      }
+
+      // Insert new registration
       const { error } = await supabase.from("volunteer_registrations").insert({
         volunteer_id: user.id,
         ngo_id: ngoId,
@@ -90,23 +114,28 @@ const VolunteerRegistrationForm = ({
       });
 
       if (error) {
-        // Check if it's a unique constraint violation (already registered)
-        if (error.code === "23505") {
-          toast({
-            title: "Already registered",
-            description: "You have already registered with this organization",
-            variant: "destructive",
-          });
-        } else {
-          throw error;
-        }
-      } else {
-        toast({
-          title: "Registration submitted",
-          description: `Your volunteer application for ${ngoName} has been submitted successfully!`,
-        });
-        onClose();
+        throw error;
       }
+
+      toast({
+        title: "Registration submitted",
+        description: `Your volunteer application for ${ngoName} has been submitted successfully!`,
+      });
+      
+      // Send notification to the NGO
+      await supabase.from("notifications").insert({
+        recipient_id: ngoId,
+        type: "volunteer_application",
+        content: `New volunteer application from ${values.name}`,
+        metadata: JSON.stringify({
+          volunteer_name: values.name,
+          volunteer_email: values.email,
+          volunteer_id: user.id,
+          interest: values.interest || "Not specified",
+        }),
+      });
+
+      onClose();
     } catch (error: any) {
       toast({
         title: "Registration failed",

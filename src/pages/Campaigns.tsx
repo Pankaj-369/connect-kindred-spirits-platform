@@ -22,7 +22,9 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Plus } from 'lucide-react';
-import { useToast } from '@/components/ui/use-toast';
+import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
 import { useForm } from 'react-hook-form';
 import {
   Form,
@@ -86,25 +88,84 @@ const Campaigns = () => {
   const [campaigns, setCampaigns] = useState<Campaign[]>(initialCampaigns);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const { toast } = useToast();
+  const { user, profile } = useAuth();
   
   const form = useForm<FormData>({
     defaultValues: {
       title: '',
       description: '',
       goal: '',
-      organizer: '',
+      organizer: profile?.ngo_name || '',
       imageUrl: '',
     }
   });
   
-  const onSubmit = (data: FormData) => {
+  const onSubmit = async (data: FormData) => {
+    if (!user) return;
+
     const newCampaign: Campaign = {
       id: campaigns.length + 1,
       ...data,
       createdAt: new Date(),
     };
     
+    // Add campaign to the local state
     setCampaigns([...campaigns, newCampaign]);
+    
+    try {
+      // For demo purposes, we'll simulate storing in Supabase
+      // In a real app, you'd add this to an actual "campaigns" table
+      
+      // Notify all volunteers about the new campaign
+      const { data: volunteers, error: volunteersError } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('is_ngo', false);
+      
+      if (volunteersError) {
+        console.error("Error fetching volunteers:", volunteersError);
+        throw volunteersError;
+      }
+
+      // Create notifications for each volunteer
+      if (volunteers && volunteers.length > 0) {
+        const notifications = volunteers.map(volunteer => ({
+          recipient_id: volunteer.id,
+          type: "new_campaign",
+          content: `New campaign: ${data.title}`,
+          metadata: JSON.stringify({
+            campaign_title: data.title,
+            campaign_description: data.description,
+            ngo_name: data.organizer,
+            ngo_id: user.id,
+          }),
+        }));
+
+        const { error: notificationError } = await supabase
+          .from('notifications')
+          .insert(notifications);
+
+        if (notificationError) {
+          console.error("Error creating notifications:", notificationError);
+          throw notificationError;
+        }
+      }
+
+      // Send an email to all volunteers (This would be implemented with an Edge Function in a real app)
+      // For now, we'll show a toast message simulating email sent
+      toast({
+        title: "Notifications sent",
+        description: `${volunteers?.length || 0} volunteers have been notified about your new campaign.`,
+      });
+    } catch (error: any) {
+      console.error("Error:", error);
+      toast({
+        title: "Error",
+        description: "There was an error creating notifications.",
+        variant: "destructive"
+      });
+    }
+    
     toast({
       title: "Campaign created!",
       description: "Your campaign has been successfully created.",

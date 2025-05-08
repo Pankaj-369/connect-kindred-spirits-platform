@@ -2,6 +2,8 @@
 import { useNavigate } from 'react-router-dom';
 import { Calendar, Heart, MapPin, Users } from 'lucide-react';
 import { Button } from './ui/button';
+import { useAuth } from '@/contexts/AuthContext';
+import { useToast } from '@/hooks/use-toast';
 
 interface OpportunityCardProps {
   id: number;
@@ -12,6 +14,7 @@ interface OpportunityCardProps {
   spots: number;
   image: string;
   category: string;
+  organizationId: string;
   onApply?: () => void;
 }
 
@@ -24,14 +27,36 @@ const OpportunityCard = ({
   spots,
   image,
   category,
+  organizationId,
   onApply
 }: OpportunityCardProps) => {
   const navigate = useNavigate();
+  const { isAuthenticated } = useAuth();
+  const { toast } = useToast();
   
   const handleViewDetails = () => {
-    // Assuming the organization has an ID that matches the NGO id
-    // In a real implementation, this would come from the data
-    navigate(`/ngo/${id}`);
+    navigate(`/ngo/${organizationId || id}`);
+  };
+
+  const handleApply = () => {
+    if (!isAuthenticated) {
+      toast({
+        title: "Authentication Required",
+        description: "Please sign in to apply for this opportunity",
+        variant: "destructive"
+      });
+      navigate('/auth', { state: { returnTo: window.location.pathname } });
+      return;
+    }
+
+    if (onApply) {
+      onApply();
+    } else {
+      toast({
+        title: "Application Process",
+        description: "Please contact the organization directly to apply for this opportunity."
+      });
+    }
   };
 
   return (
@@ -77,7 +102,7 @@ const OpportunityCard = ({
           </Button>
           <Button 
             className="flex-1 bg-connect-primary hover:bg-connect-primary/90"
-            onClick={onApply}
+            onClick={handleApply}
           >
             Apply Now
           </Button>
