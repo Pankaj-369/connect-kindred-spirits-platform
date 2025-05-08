@@ -73,6 +73,7 @@ const VolunteerRegistrationForm = ({
         description: "Please sign in to register as a volunteer",
         variant: "destructive",
       });
+      onClose();
       return;
     }
 
@@ -111,10 +112,26 @@ const VolunteerRegistrationForm = ({
         phone: values.phone,
         interest: values.interest,
         availability: values.availability,
+        created_at: new Date().toISOString()
       });
 
       if (error) {
         throw error;
+      }
+
+      // Try to create a notification for the NGO
+      try {
+        await supabase.from("notifications").insert({
+          recipient_id: ngoId,
+          sender_id: user.id,
+          type: "volunteer_application",
+          content: `${values.name} has applied to volunteer with your organization`,
+          is_read: false,
+          created_at: new Date().toISOString()
+        });
+      } catch (notifError) {
+        // Silently fail if notifications table doesn't exist
+        console.error("Failed to create notification:", notifError);
       }
 
       toast({

@@ -83,6 +83,9 @@ const Profile = () => {
         title: "Profile updated",
         description: "Your profile has been updated successfully",
       });
+      
+      // Redirect to home after successful profile update
+      navigate("/");
     } catch (error: any) {
       toast({
         title: "Error updating profile",
