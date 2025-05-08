@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -30,6 +29,7 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { CheckCircle, XCircle, Clock, Mail, Phone, Calendar } from "lucide-react";
+import { User } from 'lucide-react'; // Make sure this import exists
 
 type VolunteerRegistration = {
   id: string;
@@ -218,7 +218,7 @@ const VolunteerManagement = () => {
             ) : registrations.length === 0 ? (
               <div className="py-12 text-center">
                 <div className="mx-auto w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center">
-                  <Users className="h-8 w-8 text-gray-400" />
+                  <User className="h-4 w-4 mr-2" /> // Update this line
                 </div>
                 <h3 className="mt-4 text-lg font-medium">No applications yet</h3>
                 <p className="mt-2 text-muted-foreground max-w-sm mx-auto">

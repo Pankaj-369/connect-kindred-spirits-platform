@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { Menu, X, User, LogIn, LogOut } from 'lucide-react';
@@ -14,7 +13,7 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 import { cn } from '@/lib/utils';
-import { useMobile } from '@/hooks/use-mobile';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 type NavLinkItem = {
   path: string;
@@ -31,7 +30,7 @@ const navLinks: NavLinkItem[] = [
 const Navigation = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const { isAuthenticated, signOut, profile } = useAuth();
-  const isMobile = useMobile();
+  const isMobile = useIsMobile();
   const navigate = useNavigate();
 
   const toggleMenu = () => {
