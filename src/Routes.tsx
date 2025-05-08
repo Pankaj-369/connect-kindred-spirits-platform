@@ -11,22 +11,53 @@ import VolunteerManagement from './pages/VolunteerManagement';
 import Opportunities from './pages/Opportunities';
 import About from './pages/About';
 import Dashboard from './pages/Dashboard';
+import AuthGuard from './components/AuthGuard';
+import PublicGuard from './components/PublicGuard';
+import Layout from './components/Layout';
 
 const Routes = () => {
   return (
     <RouterRoutes>
-      <Route path="/" element={<Index />} />
-      <Route path="/auth" element={<Auth />} />
-      <Route path="/login" element={<Navigate to="/auth" />} />
-      <Route path="/register" element={<Navigate to="/auth?tab=register" />} />
-      <Route path="/profile" element={<Profile />} />
-      <Route path="/dashboard" element={<Dashboard />} />
-      <Route path="/campaigns" element={<Campaigns />} />
-      <Route path="/ngo-list" element={<NGOList />} />
-      <Route path="/ngo/:id" element={<NGODetail />} />
-      <Route path="/volunteer-management" element={<VolunteerManagement />} />
-      <Route path="/opportunities" element={<Opportunities />} />
-      <Route path="/about" element={<About />} />
+      <Route element={<Layout />}>
+        {/* Public routes */}
+        <Route path="/" element={<Index />} />
+        <Route path="/about" element={<About />} />
+        <Route path="/opportunities" element={<Opportunities />} />
+        <Route path="/ngo-list" element={<NGOList />} />
+        <Route path="/ngo/:id" element={<NGODetail />} />
+        
+        {/* Auth routes - redirect if already logged in */}
+        <Route path="/auth" element={
+          <PublicGuard>
+            <Auth />
+          </PublicGuard>
+        } />
+        <Route path="/login" element={<Navigate to="/auth" />} />
+        <Route path="/register" element={<Navigate to="/auth?tab=register" />} />
+        
+        {/* Protected routes - require authentication */}
+        <Route path="/profile" element={
+          <AuthGuard>
+            <Profile />
+          </AuthGuard>
+        } />
+        <Route path="/dashboard" element={
+          <AuthGuard>
+            <Dashboard />
+          </AuthGuard>
+        } />
+        <Route path="/campaigns" element={
+          <AuthGuard allowedRoles={['ngo']}>
+            <Campaigns />
+          </AuthGuard>
+        } />
+        <Route path="/volunteer-management" element={
+          <AuthGuard allowedRoles={['ngo']}>
+            <VolunteerManagement />
+          </AuthGuard>
+        } />
+      </Route>
+      
       <Route path="*" element={<NotFound />} />
     </RouterRoutes>
   );

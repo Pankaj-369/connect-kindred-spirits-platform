@@ -1,7 +1,7 @@
 
 import { useState } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
-import { Menu, X, User, LogIn, LogOut } from 'lucide-react';
+import { Menu, X, User, LogIn, LogOut, Home, Calendar, Users } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
 import {
@@ -12,26 +12,9 @@ import {
   DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-
+import NotificationCenter from './NotificationCenter';
 import { cn } from '@/lib/utils';
 import { useIsMobile } from '@/hooks/use-mobile';
-
-type NavLinkItem = {
-  path: string;
-  label: string;
-  requiresAuth?: boolean;
-  requiresRole?: 'ngo' | 'volunteer';
-};
-
-// Define all possible navigation links
-const allNavLinks: NavLinkItem[] = [
-  { path: '/about', label: 'About' },
-  { path: '/opportunities', label: 'Opportunities' },
-  { path: '/campaigns', label: 'Manage Campaigns', requiresAuth: true, requiresRole: 'ngo' },
-  { path: '/ngo-list', label: 'NGOs' },
-  { path: '/volunteer-management', label: 'Volunteers', requiresAuth: true, requiresRole: 'ngo' },
-  { path: '/dashboard', label: 'Dashboard', requiresAuth: true },
-];
 
 const Navigation = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -52,26 +35,12 @@ const Navigation = () => {
     navigate('/');
   };
 
-  // Filter links based on auth status and user role
-  const navLinks = allNavLinks.filter(link => {
-    // Public links
-    if (!link.requiresAuth) return true;
-    
-    // Auth required but user not authenticated
-    if (link.requiresAuth && !isAuthenticated) return false;
-    
-    // Role-specific links
-    if (link.requiresRole) {
-      const isNGO = profile?.is_ngo === true;
-      if (link.requiresRole === 'ngo' && !isNGO) return false;
-      if (link.requiresRole === 'volunteer' && isNGO) return false;
-    }
-    
-    return true;
-  });
+  // Determine user role
+  const isNGO = profile?.is_ngo === true;
+  const userRole = isNGO ? 'ngo' : 'volunteer';
 
   return (
-    <nav className="bg-white shadow-sm border-b border-gray-200">
+    <nav className="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-50">
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
@@ -82,12 +51,110 @@ const Navigation = () => {
           </div>
 
           {/* Desktop Navigation */}
-          <div className="hidden md:block">
-            <div className="ml-10 flex items-center space-x-4">
-              {navLinks.map((link) => (
+          <div className="hidden md:flex items-center space-x-4">
+            {/* Always visible links */}
+            <NavLink
+              to="/"
+              className={({ isActive }) =>
+                cn(
+                  "px-3 py-2 rounded-md text-sm font-medium transition-colors flex items-center",
+                  isActive
+                    ? "bg-connect-primary text-white"
+                    : "text-gray-600 hover:bg-gray-100"
+                )
+              }
+              onClick={closeMenu}
+            >
+              <Home className="h-4 w-4 mr-1" />
+              Home
+            </NavLink>
+            
+            <NavLink
+              to="/opportunities"
+              className={({ isActive }) =>
+                cn(
+                  "px-3 py-2 rounded-md text-sm font-medium transition-colors",
+                  isActive
+                    ? "bg-connect-primary text-white"
+                    : "text-gray-600 hover:bg-gray-100"
+                )
+              }
+              onClick={closeMenu}
+            >
+              Opportunities
+            </NavLink>
+            
+            <NavLink
+              to="/ngo-list"
+              className={({ isActive }) =>
+                cn(
+                  "px-3 py-2 rounded-md text-sm font-medium transition-colors",
+                  isActive
+                    ? "bg-connect-primary text-white"
+                    : "text-gray-600 hover:bg-gray-100"
+                )
+              }
+              onClick={closeMenu}
+            >
+              NGOs
+            </NavLink>
+            
+            <NavLink
+              to="/about"
+              className={({ isActive }) =>
+                cn(
+                  "px-3 py-2 rounded-md text-sm font-medium transition-colors",
+                  isActive
+                    ? "bg-connect-primary text-white"
+                    : "text-gray-600 hover:bg-gray-100"
+                )
+              }
+              onClick={closeMenu}
+            >
+              About
+            </NavLink>
+
+            {/* Authenticated and role-specific links */}
+            {isAuthenticated && (
+              <>
+                {isNGO && (
+                  <>
+                    <NavLink
+                      to="/campaigns"
+                      className={({ isActive }) =>
+                        cn(
+                          "px-3 py-2 rounded-md text-sm font-medium transition-colors flex items-center",
+                          isActive
+                            ? "bg-connect-primary text-white"
+                            : "text-gray-600 hover:bg-gray-100"
+                        )
+                      }
+                      onClick={closeMenu}
+                    >
+                      <Calendar className="h-4 w-4 mr-1" />
+                      Manage Campaigns
+                    </NavLink>
+                    
+                    <NavLink
+                      to="/volunteer-management"
+                      className={({ isActive }) =>
+                        cn(
+                          "px-3 py-2 rounded-md text-sm font-medium transition-colors flex items-center",
+                          isActive
+                            ? "bg-connect-primary text-white"
+                            : "text-gray-600 hover:bg-gray-100"
+                        )
+                      }
+                      onClick={closeMenu}
+                    >
+                      <Users className="h-4 w-4 mr-1" />
+                      Volunteers
+                    </NavLink>
+                  </>
+                )}
+                
                 <NavLink
-                  key={link.path}
-                  to={link.path}
+                  to="/dashboard"
                   className={({ isActive }) =>
                     cn(
                       "px-3 py-2 rounded-md text-sm font-medium transition-colors",
@@ -98,14 +165,21 @@ const Navigation = () => {
                   }
                   onClick={closeMenu}
                 >
-                  {link.label}
+                  Dashboard
                 </NavLink>
-              ))}
-            </div>
+              </>
+            )}
           </div>
 
-          {/* Auth Buttons or User Menu */}
-          <div className="hidden md:block">
+          {/* Right Side Menu (Auth, Notifications & User Menu) */}
+          <div className="hidden md:flex items-center space-x-2">
+            {/* Show notifications if authenticated */}
+            {isAuthenticated && (
+              <div className="mr-2">
+                <NotificationCenter />
+              </div>
+            )}
+            
             {!isAuthenticated ? (
               <div className="flex items-center space-x-2">
                 <Button
@@ -155,7 +229,12 @@ const Navigation = () => {
           </div>
 
           {/* Mobile Menu Button */}
-          <div className="md:hidden">
+          <div className="md:hidden flex items-center">
+            {isAuthenticated && (
+              <div className="mr-2">
+                <NotificationCenter />
+              </div>
+            )}
             <Button
               variant="ghost"
               size="icon"
@@ -176,23 +255,123 @@ const Navigation = () => {
       {isMenuOpen && (
         <div className="md:hidden">
           <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
-            {navLinks.map((link) => (
-              <NavLink
-                key={link.path}
-                to={link.path}
-                className={({ isActive }) =>
-                  cn(
-                    "block px-3 py-2 rounded-md text-base font-medium",
-                    isActive
-                      ? "bg-connect-primary text-white"
-                      : "text-gray-600 hover:bg-gray-100"
-                  )
-                }
-                onClick={closeMenu}
-              >
-                {link.label}
-              </NavLink>
-            ))}
+            {/* Always include home link */}
+            <NavLink
+              to="/"
+              className={({ isActive }) =>
+                cn(
+                  "block px-3 py-2 rounded-md text-base font-medium flex items-center",
+                  isActive
+                    ? "bg-connect-primary text-white"
+                    : "text-gray-600 hover:bg-gray-100"
+                )
+              }
+              onClick={closeMenu}
+            >
+              <Home className="h-4 w-4 mr-2" />
+              Home
+            </NavLink>
+            
+            <NavLink
+              to="/opportunities"
+              className={({ isActive }) =>
+                cn(
+                  "block px-3 py-2 rounded-md text-base font-medium",
+                  isActive
+                    ? "bg-connect-primary text-white"
+                    : "text-gray-600 hover:bg-gray-100"
+                )
+              }
+              onClick={closeMenu}
+            >
+              Opportunities
+            </NavLink>
+            
+            <NavLink
+              to="/ngo-list"
+              className={({ isActive }) =>
+                cn(
+                  "block px-3 py-2 rounded-md text-base font-medium",
+                  isActive
+                    ? "bg-connect-primary text-white"
+                    : "text-gray-600 hover:bg-gray-100"
+                )
+              }
+              onClick={closeMenu}
+            >
+              NGOs
+            </NavLink>
+            
+            <NavLink
+              to="/about"
+              className={({ isActive }) =>
+                cn(
+                  "block px-3 py-2 rounded-md text-base font-medium",
+                  isActive
+                    ? "bg-connect-primary text-white"
+                    : "text-gray-600 hover:bg-gray-100"
+                )
+              }
+              onClick={closeMenu}
+            >
+              About
+            </NavLink>
+
+            {/* Authenticated and role-specific links */}
+            {isAuthenticated && (
+              <>
+                {isNGO && (
+                  <>
+                    <NavLink
+                      to="/campaigns"
+                      className={({ isActive }) =>
+                        cn(
+                          "block px-3 py-2 rounded-md text-base font-medium flex items-center",
+                          isActive
+                            ? "bg-connect-primary text-white"
+                            : "text-gray-600 hover:bg-gray-100"
+                        )
+                      }
+                      onClick={closeMenu}
+                    >
+                      <Calendar className="h-4 w-4 mr-2" />
+                      Manage Campaigns
+                    </NavLink>
+                    
+                    <NavLink
+                      to="/volunteer-management"
+                      className={({ isActive }) =>
+                        cn(
+                          "block px-3 py-2 rounded-md text-base font-medium flex items-center",
+                          isActive
+                            ? "bg-connect-primary text-white"
+                            : "text-gray-600 hover:bg-gray-100"
+                        )
+                      }
+                      onClick={closeMenu}
+                    >
+                      <Users className="h-4 w-4 mr-2" />
+                      Volunteers
+                    </NavLink>
+                  </>
+                )}
+                
+                <NavLink
+                  to="/dashboard"
+                  className={({ isActive }) =>
+                    cn(
+                      "block px-3 py-2 rounded-md text-base font-medium",
+                      isActive
+                        ? "bg-connect-primary text-white"
+                        : "text-gray-600 hover:bg-gray-100"
+                    )
+                  }
+                  onClick={closeMenu}
+                >
+                  Dashboard
+                </NavLink>
+              </>
+            )}
             
             {!isAuthenticated ? (
               <div className="pt-4 pb-3 border-t border-gray-200">

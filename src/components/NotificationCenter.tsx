@@ -12,103 +12,100 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover';
 
-interface Notification {
+// Interface for volunteer applications (used as notifications for NGOs)
+interface VolunteerApplication {
   id: string;
-  recipient_id: string;
-  type: string;
-  content: string;
-  metadata: any;
+  name: string;
+  email: string;
   created_at: string;
-  is_read: boolean;
+  interest?: string;
+  status: string;
+  is_read?: boolean; // We'll track this in memory since the table doesn't have this column
 }
 
 const NotificationCenter: React.FC = () => {
-  const { user } = useAuth();
-  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const { user, profile } = useAuth();
+  const [notifications, setNotifications] = useState<VolunteerApplication[]>([]);
+  const [readStatus, setReadStatus] = useState<Record<string, boolean>>({});
   const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState(false);
 
-  const unreadCount = notifications.filter(n => !n.is_read).length;
+  // Get unread count based on our local read status tracking
+  const unreadCount = notifications.filter(n => !readStatus[n.id]).length;
 
   useEffect(() => {
-    if (!user) return;
+    if (!user || !profile) return;
     
-    const fetchNotifications = async () => {
-      try {
-        const { data, error } = await supabase
-          .from('notifications')
-          .select('*')
-          .eq('recipient_id', user.id)
-          .order('created_at', { ascending: false })
-          .limit(20);
+    // Check if user is an NGO to fetch volunteer applications
+    if (profile.is_ngo) {
+      const fetchVolunteerApplications = async () => {
+        try {
+          const { data, error } = await supabase
+            .from('volunteer_registrations')
+            .select('*')
+            .eq('ngo_id', user.id)
+            .order('created_at', { ascending: false })
+            .limit(20);
+          
+          if (error) throw error;
+
+          // Initialize all as unread for first load
+          const newReadStatus: Record<string, boolean> = {};
+          data?.forEach(item => {
+            newReadStatus[item.id] = false;
+          });
+          
+          setReadStatus(prev => ({...prev, ...newReadStatus}));
+          setNotifications(data || []);
+        } catch (error) {
+          console.error('Error fetching volunteer applications:', error);
+        } finally {
+          setLoading(false);
+        }
+      };
+      
+      fetchVolunteerApplications();
+      
+      // Set up a subscription to listen for new volunteer applications
+      const channel = supabase
+        .channel('volunteer-applications')
+        .on('postgres_changes', { 
+          event: 'INSERT', 
+          schema: 'public', 
+          table: 'volunteer_registrations',
+          filter: `ngo_id=eq.${user.id}` 
+        }, (payload) => {
+          setNotifications(prev => [payload.new as any, ...prev]);
+          // Mark new notification as unread
+          setReadStatus(prev => ({...prev, [payload.new.id]: false}));
+        })
+        .subscribe();
         
-        if (error) throw error;
-        setNotifications(data || []);
-      } catch (error) {
-        console.error('Error fetching notifications:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-    
-    fetchNotifications();
-    
-    // Set up a subscription to listen for new notifications
-    const channel = supabase
-      .channel('notifications')
-      .on('postgres_changes', { 
-        event: 'INSERT', 
-        schema: 'public', 
-        table: 'notifications',
-        filter: `recipient_id=eq.${user.id}` 
-      }, (payload) => {
-        setNotifications(prev => [payload.new as Notification, ...prev]);
-      })
-      .subscribe();
-      
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [user]);
-  
-  const markAsRead = async (notificationId: string) => {
-    try {
-      await supabase
-        .from('notifications')
-        .update({ is_read: true })
-        .eq('id', notificationId);
-      
-      // Update local state
-      setNotifications(prev =>
-        prev.map(n => n.id === notificationId ? { ...n, is_read: true } : n)
-      );
-    } catch (error) {
-      console.error('Error marking notification as read:', error);
+      return () => {
+        supabase.removeChannel(channel);
+      };
+    } else {
+      // For volunteers, we don't have notifications yet
+      setLoading(false);
     }
+  }, [user, profile]);
+  
+  const markAsRead = (notificationId: string) => {
+    // Update local state only
+    setReadStatus(prev => ({
+      ...prev,
+      [notificationId]: true
+    }));
   };
   
-  const markAllAsRead = async () => {
-    try {
-      if (!user) return;
-      
-      const unreadIds = notifications
-        .filter(n => !n.is_read)
-        .map(n => n.id);
-        
-      if (unreadIds.length === 0) return;
-      
-      await supabase
-        .from('notifications')
-        .update({ is_read: true })
-        .in('id', unreadIds);
-      
-      // Update local state
-      setNotifications(prev =>
-        prev.map(n => ({ ...n, is_read: true }))
-      );
-    } catch (error) {
-      console.error('Error marking all as read:', error);
-    }
+  const markAllAsRead = () => {
+    // Update all notifications to read in local state
+    const updatedReadStatus = {...readStatus};
+    notifications.forEach(notification => {
+      updatedReadStatus[notification.id] = true;
+    });
+    
+    setReadStatus(updatedReadStatus);
   };
   
   const formatTimestamp = (timestamp: string) => {
@@ -128,6 +125,11 @@ const NotificationCenter: React.FC = () => {
     } else {
       return date.toLocaleDateString();
     }
+  };
+
+  // Generate notification content based on application
+  const getNotificationContent = (application: VolunteerApplication) => {
+    return `New volunteer application from ${application.name}`;
   };
 
   return (
@@ -167,14 +169,14 @@ const NotificationCenter: React.FC = () => {
             {notifications.map((notification) => (
               <div 
                 key={notification.id}
-                className={`p-3 border-b last:border-b-0 flex items-start hover:bg-gray-50 transition-colors cursor-pointer ${!notification.is_read ? 'bg-blue-50' : ''}`}
+                className={`p-3 border-b last:border-b-0 flex items-start hover:bg-gray-50 transition-colors cursor-pointer ${!readStatus[notification.id] ? 'bg-blue-50' : ''}`}
                 onClick={() => markAsRead(notification.id)}
               >
                 <div className="flex-1 mr-2">
-                  <p className="text-sm font-medium">{notification.content}</p>
+                  <p className="text-sm font-medium">{getNotificationContent(notification)}</p>
                   <p className="text-xs text-gray-500">{formatTimestamp(notification.created_at)}</p>
                 </div>
-                {!notification.is_read && (
+                {!readStatus[notification.id] && (
                   <div className="w-2 h-2 bg-blue-500 rounded-full mt-1"></div>
                 )}
               </div>

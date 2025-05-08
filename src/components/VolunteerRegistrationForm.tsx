@@ -122,19 +122,6 @@ const VolunteerRegistrationForm = ({
         description: `Your volunteer application for ${ngoName} has been submitted successfully!`,
       });
       
-      // Send notification to the NGO
-      await supabase.from("notifications").insert({
-        recipient_id: ngoId,
-        type: "volunteer_application",
-        content: `New volunteer application from ${values.name}`,
-        metadata: JSON.stringify({
-          volunteer_name: values.name,
-          volunteer_email: values.email,
-          volunteer_id: user.id,
-          interest: values.interest || "Not specified",
-        }),
-      });
-
       onClose();
     } catch (error: any) {
       toast({
