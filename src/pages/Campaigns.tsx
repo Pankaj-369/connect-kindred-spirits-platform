@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import Navigation from '@/components/Navigation';
 import { Button } from '@/components/ui/button';
@@ -127,30 +126,9 @@ const Campaigns = () => {
         throw volunteersError;
       }
 
-      // Create notifications for each volunteer
-      if (volunteers && volunteers.length > 0) {
-        const notifications = volunteers.map(volunteer => ({
-          recipient_id: volunteer.id,
-          type: "new_campaign",
-          content: `New campaign: ${data.title}`,
-          metadata: JSON.stringify({
-            campaign_title: data.title,
-            campaign_description: data.description,
-            ngo_name: data.organizer,
-            ngo_id: user.id,
-          }),
-        }));
-
-        const { error: notificationError } = await supabase
-          .from('notifications')
-          .insert(notifications);
-
-        if (notificationError) {
-          console.error("Error creating notifications:", notificationError);
-          throw notificationError;
-        }
-      }
-
+      // Note: We're not creating notifications since the 'notifications' table 
+      // doesn't exist yet in the database schema
+      
       // Send an email to all volunteers (This would be implemented with an Edge Function in a real app)
       // For now, we'll show a toast message simulating email sent
       toast({
