@@ -1,11 +1,14 @@
 
+import { useNavigate } from 'react-router-dom';
 import { ArrowRight } from 'lucide-react';
 import { Button } from './ui/button';
 
 const NGOSpotlightSection = () => {
+  const navigate = useNavigate();
+  
   const featuredNGOs = [
     {
-      id: 1,
+      id: '201',
       name: 'Ocean Guardians',
       logo: 'https://ui-avatars.com/api/?name=Ocean+Guardians&background=0D8ABC&color=fff&size=128',
       category: 'Environment',
@@ -14,7 +17,7 @@ const NGOSpotlightSection = () => {
       location: 'Global',
     },
     {
-      id: 2,
+      id: '202',
       name: 'Community Builders',
       logo: 'https://ui-avatars.com/api/?name=Community+Builders&background=7CB342&color=fff&size=128',
       category: 'Community',
@@ -23,7 +26,7 @@ const NGOSpotlightSection = () => {
       location: 'Multiple Cities',
     },
     {
-      id: 3,
+      id: '203',
       name: 'Animal Protectors',
       logo: 'https://ui-avatars.com/api/?name=Animal+Protectors&background=EF6C00&color=fff&size=128',
       category: 'Animal Welfare',
@@ -32,6 +35,10 @@ const NGOSpotlightSection = () => {
       location: 'National',
     }
   ];
+
+  const handleViewProfile = (ngoId: string) => {
+    navigate(`/ngo/${ngoId}`);
+  };
 
   return (
     <section className="py-16">
@@ -59,6 +66,7 @@ const NGOSpotlightSection = () => {
               <Button 
                 variant="outline" 
                 className="w-full border-connect-primary text-connect-primary hover:bg-connect-primary/10"
+                onClick={() => handleViewProfile(ngo.id)}
               >
                 View Profile
               </Button>
@@ -67,7 +75,10 @@ const NGOSpotlightSection = () => {
         </div>
 
         <div className="text-center mt-10">
-          <Button className="bg-connect-primary hover:bg-connect-primary/90">
+          <Button 
+            className="bg-connect-primary hover:bg-connect-primary/90"
+            onClick={() => navigate('/ngo-list')}
+          >
             Explore All NGOs
             <ArrowRight className="ml-2 h-4 w-4" />
           </Button>

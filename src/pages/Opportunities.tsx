@@ -1,5 +1,8 @@
 
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import Navigation from '@/components/Navigation';
+import VolunteerRegistrationForm from '@/components/VolunteerRegistrationForm';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -15,6 +18,7 @@ type Opportunity = {
   id: number;
   title: string;
   organization: string;
+  organizationId: string;
   location: string;
   commitment: string;
   category: string;
@@ -27,6 +31,7 @@ const opportunities: Opportunity[] = [
     id: 1,
     title: "Volunteer Teacher",
     organization: "Education First",
+    organizationId: "1",
     location: "Remote",
     commitment: "5 hours/week",
     category: "Education",
@@ -37,6 +42,7 @@ const opportunities: Opportunity[] = [
     id: 2,
     title: "Food Distribution Assistant",
     organization: "Community Food Bank",
+    organizationId: "2",
     location: "San Francisco, CA",
     commitment: "3 hours/week",
     category: "Food Security",
@@ -47,6 +53,7 @@ const opportunities: Opportunity[] = [
     id: 3,
     title: "Web Developer",
     organization: "Water For All",
+    organizationId: "3",
     location: "Remote",
     commitment: "Project-based",
     category: "IT & Technology",
@@ -57,6 +64,7 @@ const opportunities: Opportunity[] = [
     id: 4,
     title: "Event Coordinator",
     organization: "Animal Rescue Foundation",
+    organizationId: "4",
     location: "New York, NY",
     commitment: "10 hours/month",
     category: "Animal Welfare",
@@ -67,6 +75,7 @@ const opportunities: Opportunity[] = [
     id: 5,
     title: "Environmental Researcher",
     organization: "Green Earth Initiative",
+    organizationId: "5", 
     location: "Portland, OR",
     commitment: "Part-time",
     category: "Environment",
@@ -76,6 +85,24 @@ const opportunities: Opportunity[] = [
 ];
 
 const Opportunities = () => {
+  const navigate = useNavigate();
+  const [selectedOpportunity, setSelectedOpportunity] = useState<Opportunity | null>(null);
+  const [isRegistrationFormOpen, setIsRegistrationFormOpen] = useState(false);
+
+  const handleViewDetails = (opportunity: Opportunity) => {
+    navigate(`/ngo/${opportunity.organizationId}`);
+  };
+  
+  const handleApplyNow = (opportunity: Opportunity) => {
+    setSelectedOpportunity(opportunity);
+    setIsRegistrationFormOpen(true);
+  };
+
+  const handleCloseRegistrationForm = () => {
+    setIsRegistrationFormOpen(false);
+    setSelectedOpportunity(null);
+  };
+
   return (
     <div className="min-h-screen flex flex-col">
       <Navigation />
@@ -117,13 +144,34 @@ const Opportunities = () => {
                   </ul>
                 </div>
               </CardContent>
-              <CardFooter>
-                <Button className="w-full">Apply Now</Button>
+              <CardFooter className="flex gap-3">
+                <Button 
+                  variant="outline" 
+                  className="flex-1"
+                  onClick={() => handleViewDetails(opportunity)}
+                >
+                  View Details
+                </Button>
+                <Button 
+                  className="flex-1"
+                  onClick={() => handleApplyNow(opportunity)}
+                >
+                  Apply Now
+                </Button>
               </CardFooter>
             </Card>
           ))}
         </div>
       </main>
+
+      {selectedOpportunity && (
+        <VolunteerRegistrationForm
+          ngoId={selectedOpportunity.organizationId}
+          ngoName={selectedOpportunity.organization}
+          isOpen={isRegistrationFormOpen}
+          onClose={handleCloseRegistrationForm}
+        />
+      )}
     </div>
   );
 };

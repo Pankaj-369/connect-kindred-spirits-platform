@@ -1,6 +1,8 @@
 
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import OpportunityCard from './OpportunityCard';
+import VolunteerRegistrationForm from './VolunteerRegistrationForm';
 import { Button } from './ui/button';
 import { Search, ArrowRight } from 'lucide-react';
 
@@ -14,7 +16,8 @@ const opportunities = [
     date: 'May 15, 2025',
     spots: 12,
     image: 'https://images.unsplash.com/photo-1618477461853-cf177663618e?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
-    category: 'Environment'
+    category: 'Environment',
+    organizationId: '101'
   },
   {
     id: 2,
@@ -24,7 +27,8 @@ const opportunities = [
     date: 'May 20, 2025',
     spots: 5,
     image: 'https://images.unsplash.com/photo-1593113630400-ea4288922497?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
-    category: 'Community'
+    category: 'Community',
+    organizationId: '102'
   },
   {
     id: 3,
@@ -34,7 +38,8 @@ const opportunities = [
     date: 'Ongoing',
     spots: 8,
     image: 'https://images.unsplash.com/photo-1509062522246-3755977927d7?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
-    category: 'Education'
+    category: 'Education',
+    organizationId: '103'
   },
   {
     id: 4,
@@ -44,7 +49,8 @@ const opportunities = [
     date: 'June 5, 2025',
     spots: 6,
     image: 'https://images.unsplash.com/photo-1472396961693-142e6e269027?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
-    category: 'Animals'
+    category: 'Animals',
+    organizationId: '104'
   },
   {
     id: 5,
@@ -54,7 +60,8 @@ const opportunities = [
     date: 'Every Saturday',
     spots: 15,
     image: 'https://images.unsplash.com/photo-1593113616828-7ad829b01c8b?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
-    category: 'Hunger Relief'
+    category: 'Hunger Relief',
+    organizationId: '105'
   },
   {
     id: 6,
@@ -64,15 +71,19 @@ const opportunities = [
     date: 'Flexible',
     spots: 10,
     image: 'https://images.unsplash.com/photo-1576765608866-5b51037ed7f4?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
-    category: 'Healthcare'
+    category: 'Healthcare',
+    organizationId: '106'
   }
 ];
 
 const categories = ['All', 'Environment', 'Community', 'Education', 'Animals', 'Hunger Relief', 'Healthcare'];
 
 const OpportunitySection = () => {
+  const navigate = useNavigate();
   const [activeFilter, setActiveFilter] = useState('All');
   const [searchQuery, setSearchQuery] = useState('');
+  const [selectedOpportunity, setSelectedOpportunity] = useState<any | null>(null);
+  const [isRegistrationFormOpen, setIsRegistrationFormOpen] = useState(false);
 
   const filteredOpportunities = opportunities.filter(opportunity => {
     // Filter by category
@@ -88,6 +99,16 @@ const OpportunitySection = () => {
     
     return true;
   });
+
+  const handleApply = (opportunity: any) => {
+    setSelectedOpportunity(opportunity);
+    setIsRegistrationFormOpen(true);
+  };
+
+  const handleCloseRegistrationForm = () => {
+    setIsRegistrationFormOpen(false);
+    setSelectedOpportunity(null);
+  };
 
   return (
     <section className="py-16 bg-gray-50">
@@ -129,6 +150,7 @@ const OpportunitySection = () => {
             <OpportunityCard
               key={opportunity.id}
               {...opportunity}
+              onApply={() => handleApply(opportunity)}
             />
           ))}
         </div>
@@ -149,12 +171,25 @@ const OpportunitySection = () => {
         )}
         
         <div className="flex justify-center mt-12">
-          <Button className="bg-connect-primary hover:bg-connect-primary/90">
+          <Button 
+            className="bg-connect-primary hover:bg-connect-primary/90"
+            onClick={() => navigate('/opportunities')}
+          >
             Browse All Opportunities
             <ArrowRight className="ml-2 h-4 w-4" />
           </Button>
         </div>
       </div>
+
+      {/* Registration Form Dialog */}
+      {selectedOpportunity && (
+        <VolunteerRegistrationForm
+          ngoId={selectedOpportunity.organizationId}
+          ngoName={selectedOpportunity.organization}
+          isOpen={isRegistrationFormOpen}
+          onClose={handleCloseRegistrationForm}
+        />
+      )}
     </section>
   );
 };

@@ -1,4 +1,5 @@
 
+import { useNavigate } from 'react-router-dom';
 import { Calendar, Heart, MapPin, Users } from 'lucide-react';
 import { Button } from './ui/button';
 
@@ -11,6 +12,7 @@ interface OpportunityCardProps {
   spots: number;
   image: string;
   category: string;
+  onApply?: () => void;
 }
 
 const OpportunityCard = ({
@@ -21,8 +23,17 @@ const OpportunityCard = ({
   date,
   spots,
   image,
-  category
+  category,
+  onApply
 }: OpportunityCardProps) => {
+  const navigate = useNavigate();
+  
+  const handleViewDetails = () => {
+    // Assuming the organization has an ID that matches the NGO id
+    // In a real implementation, this would come from the data
+    navigate(`/ngo/${id}`);
+  };
+
   return (
     <div className="bg-white rounded-xl shadow-md overflow-hidden card-hover">
       <div className="relative h-48">
@@ -56,7 +67,21 @@ const OpportunityCard = ({
             <span>{spots} spots left</span>
           </div>
         </div>
-        <Button className="w-full bg-connect-primary hover:bg-connect-primary/90">View Details</Button>
+        <div className="flex gap-2">
+          <Button 
+            variant="outline" 
+            className="flex-1"
+            onClick={handleViewDetails}
+          >
+            View Details
+          </Button>
+          <Button 
+            className="flex-1 bg-connect-primary hover:bg-connect-primary/90"
+            onClick={onApply}
+          >
+            Apply Now
+          </Button>
+        </div>
       </div>
     </div>
   );
