@@ -9,7 +9,8 @@ import {
   volunteerRegistrationSchema, 
   ngoRegistrationSchema,
   VolunteerRegistrationFormValues,
-  NGORegistrationFormValues 
+  NGORegistrationFormValues,
+  interestAreas 
 } from "@/schemas/volunteerRegistrationSchema";
 
 interface UseVolunteerRegistrationProps {
@@ -35,7 +36,7 @@ export const useVolunteerRegistration = ({
       name: profile?.full_name || "",
       email: user?.email || "",
       phone: "",
-      interest: "",
+      interest: undefined as any,
       availability: "",
       skills: "",
       experience: "",
@@ -119,6 +120,10 @@ export const useVolunteerRegistration = ({
           title: "Registration submitted",
           description: `Your volunteer application for ${ngoName} has been submitted successfully!`,
         });
+
+        // Send confirmation email (in a real app, this would be handled by a server function)
+        // This is a mock version
+        console.log(`Email would be sent to ${volunteerValues.email} confirming application to ${ngoName}`);
       } 
       else if (registrationType === "volunteer") {
         // General volunteer registration (profile update)

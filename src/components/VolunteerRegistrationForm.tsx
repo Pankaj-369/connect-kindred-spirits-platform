@@ -50,12 +50,15 @@ const VolunteerRegistrationForm = ({
         </DialogHeader>
 
         {!ngoId && (
-          <Tabs value={registrationType} onValueChange={(value) => setRegistrationType(value as "volunteer" | "ngo")}>
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="volunteer">Register as Volunteer</TabsTrigger>
-              <TabsTrigger value="ngo">Register as NGO</TabsTrigger>
-            </TabsList>
-          </Tabs>
+          <div className="mb-6">
+            <h3 className="text-sm font-medium mb-2">I am registering as:</h3>
+            <Tabs value={registrationType} onValueChange={(value) => setRegistrationType(value as "volunteer" | "ngo")} className="w-full">
+              <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="volunteer">A Volunteer</TabsTrigger>
+                <TabsTrigger value="ngo">An NGO</TabsTrigger>
+              </TabsList>
+            </Tabs>
+          </div>
         )}
 
         <Form {...form}>

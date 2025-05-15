@@ -16,24 +16,14 @@ import {
   SelectTrigger,
   SelectValue
 } from "@/components/ui/select";
-import { VolunteerRegistrationFormValues } from "@/schemas/volunteerRegistrationSchema";
+import { 
+  VolunteerRegistrationFormValues,
+  interestAreas
+} from "@/schemas/volunteerRegistrationSchema";
 
 interface VolunteerFormFieldsProps {
   form: UseFormReturn<VolunteerRegistrationFormValues>;
 }
-
-const interestAreas = [
-  "Education",
-  "Environment",
-  "Healthcare",
-  "Animal Welfare",
-  "Poverty Alleviation",
-  "Arts & Culture",
-  "Human Rights",
-  "Disaster Relief",
-  "Community Development",
-  "Other"
-];
 
 const VolunteerFormFields = ({ form }: VolunteerFormFieldsProps) => {
   return (
