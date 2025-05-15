@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import VolunteerRegistrationForm from '@/components/VolunteerRegistrationForm';
@@ -11,6 +12,7 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { useAuth } from '@/contexts/AuthContext';
 
 type Opportunity = {
   id: number;
@@ -29,7 +31,7 @@ const opportunities: Opportunity[] = [
     id: 1,
     title: "Volunteer Teacher",
     organization: "Education First",
-    organizationId: "1",
+    organizationId: "2",
     location: "Remote",
     commitment: "5 hours/week",
     category: "Education",
@@ -40,7 +42,7 @@ const opportunities: Opportunity[] = [
     id: 2,
     title: "Food Distribution Assistant",
     organization: "Community Food Bank",
-    organizationId: "2",
+    organizationId: "3",
     location: "San Francisco, CA",
     commitment: "3 hours/week",
     category: "Food Security",
@@ -51,7 +53,7 @@ const opportunities: Opportunity[] = [
     id: 3,
     title: "Web Developer",
     organization: "Water For All",
-    organizationId: "3",
+    organizationId: "1",
     location: "Remote",
     commitment: "Project-based",
     category: "IT & Technology",
@@ -84,6 +86,7 @@ const opportunities: Opportunity[] = [
 
 const Opportunities = () => {
   const navigate = useNavigate();
+  const { isAuthenticated } = useAuth();
   const [selectedOpportunity, setSelectedOpportunity] = useState<Opportunity | null>(null);
   const [isRegistrationFormOpen, setIsRegistrationFormOpen] = useState(false);
 
@@ -92,6 +95,10 @@ const Opportunities = () => {
   };
   
   const handleApplyNow = (opportunity: Opportunity) => {
+    if (!isAuthenticated) {
+      navigate('/auth', { state: { returnTo: '/opportunities' } });
+      return;
+    }
     setSelectedOpportunity(opportunity);
     setIsRegistrationFormOpen(true);
   };
