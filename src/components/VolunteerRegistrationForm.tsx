@@ -10,12 +10,15 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Form } from "@/components/ui/form";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useVolunteerRegistration } from "@/hooks/use-volunteer-registration";
 import VolunteerFormFields from "@/components/volunteer/VolunteerFormFields";
+import NGOFormFields from "@/components/ngo/NGOFormFields";
+import { useState } from "react";
 
 interface VolunteerRegistrationFormProps {
-  ngoId: string;
-  ngoName: string;
+  ngoId?: string;
+  ngoName?: string;
   isOpen: boolean;
   onClose: () => void;
 }
@@ -26,26 +29,42 @@ const VolunteerRegistrationForm = ({
   isOpen,
   onClose,
 }: VolunteerRegistrationFormProps) => {
+  const [registrationType, setRegistrationType] = useState<"volunteer" | "ngo">("volunteer");
   const { form, isSubmitting, onSubmit } = useVolunteerRegistration({
     ngoId,
     ngoName,
     onClose,
+    registrationType,
   });
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Register as a Volunteer</DialogTitle>
+          <DialogTitle>Registration</DialogTitle>
           <DialogDescription>
-            Apply to volunteer with {ngoName}. The organization will review your application
-            and get in touch with you.
+            {ngoId && ngoName 
+              ? `Apply to volunteer with ${ngoName}. The organization will review your application and get in touch with you.` 
+              : "Register as a volunteer to help organizations or register your NGO to find volunteers."}
           </DialogDescription>
         </DialogHeader>
 
+        {!ngoId && (
+          <Tabs value={registrationType} onValueChange={(value) => setRegistrationType(value as "volunteer" | "ngo")}>
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="volunteer">Register as Volunteer</TabsTrigger>
+              <TabsTrigger value="ngo">Register as NGO</TabsTrigger>
+            </TabsList>
+          </Tabs>
+        )}
+
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            <VolunteerFormFields form={form} />
+            {registrationType === "volunteer" || ngoId ? (
+              <VolunteerFormFields form={form as any} />
+            ) : (
+              <NGOFormFields form={form as any} />
+            )}
 
             <DialogFooter>
               <Button type="button" variant="outline" onClick={onClose}>

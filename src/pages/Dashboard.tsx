@@ -1,7 +1,5 @@
-
 import { useState } from 'react';
 import { Navigate, useNavigate } from 'react-router-dom';
-import Navigation from '@/components/Navigation';
 import RecommendedOpportunities from '@/components/RecommendedOpportunities';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useAuth } from '@/contexts/AuthContext';
@@ -70,172 +68,169 @@ const Dashboard = () => {
   const userLocation = profile?.location || "Not specified";
 
   return (
-    <div className="min-h-screen flex flex-col">
-      <Navigation />
-      <main className="flex-1 container mx-auto px-4 py-8">
-        <div className="flex justify-between items-center mb-6">
-          <h1 className="text-3xl font-bold">Dashboard</h1>
-          <NotificationCenter />
+    <div className="container mx-auto px-4 py-8">
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-3xl font-bold">Dashboard</h1>
+        <NotificationCenter />
+      </div>
+      
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
+        
+        {/* Left Column - User Profile Summary */}
+        <div className="md:col-span-1">
+          <Card>
+            <CardHeader>
+              <CardTitle>Your Profile</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex items-center space-x-4">
+                <div className="h-16 w-16 rounded-full bg-gray-200 overflow-hidden">
+                  <img 
+                    src={profile?.avatar_url || "https://ui-avatars.com/api/?name=Volunteer"}
+                    alt="Profile" 
+                    className="h-full w-full object-cover"
+                  />
+                </div>
+                <div>
+                  <h3 className="font-semibold text-lg">{profile?.full_name || "Volunteer"}</h3>
+                  <div className="flex items-center text-sm text-muted-foreground">
+                    <MapPin className="h-4 w-4 mr-1" />
+                    {userLocation}
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <h4 className="text-sm font-semibold mb-2 flex items-center">
+                  <Heart className="h-4 w-4 mr-1 text-connect-primary" />
+                  Your Interests
+                </h4>
+                <div className="flex flex-wrap gap-2">
+                  {interests.map((interest, index) => (
+                    <Badge key={index} variant="secondary" className="text-xs">
+                      {interest}
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+              
+              <div>
+                <h4 className="text-sm font-semibold mb-2 flex items-center">
+                  <Star className="h-4 w-4 mr-1 text-connect-primary" />
+                  Impact Stats
+                </h4>
+                <div className="grid grid-cols-2 gap-2 text-center">
+                  <div className="bg-gray-50 p-2 rounded">
+                    <span className="block text-xl font-bold text-connect-primary">0</span>
+                    <span className="text-xs text-muted-foreground">Hours</span>
+                  </div>
+                  <div className="bg-gray-50 p-2 rounded">
+                    <span className="block text-xl font-bold text-connect-primary">0</span>
+                    <span className="text-xs text-muted-foreground">Events</span>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Recommended Opportunities */}
+          <div className="mt-6">
+            <RecommendedOpportunities />
+          </div>
         </div>
         
-        <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
-          
-          {/* Left Column - User Profile Summary */}
-          <div className="md:col-span-1">
-            <Card>
-              <CardHeader>
-                <CardTitle>Your Profile</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="flex items-center space-x-4">
-                  <div className="h-16 w-16 rounded-full bg-gray-200 overflow-hidden">
-                    <img 
-                      src={profile?.avatar_url || "https://ui-avatars.com/api/?name=Volunteer"}
-                      alt="Profile" 
-                      className="h-full w-full object-cover"
-                    />
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-lg">{profile?.full_name || "Volunteer"}</h3>
-                    <div className="flex items-center text-sm text-muted-foreground">
-                      <MapPin className="h-4 w-4 mr-1" />
-                      {userLocation}
-                    </div>
-                  </div>
-                </div>
-
-                <div>
-                  <h4 className="text-sm font-semibold mb-2 flex items-center">
-                    <Heart className="h-4 w-4 mr-1 text-connect-primary" />
-                    Your Interests
-                  </h4>
-                  <div className="flex flex-wrap gap-2">
-                    {interests.map((interest, index) => (
-                      <Badge key={index} variant="secondary" className="text-xs">
-                        {interest}
-                      </Badge>
-                    ))}
-                  </div>
-                </div>
-                
-                <div>
-                  <h4 className="text-sm font-semibold mb-2 flex items-center">
-                    <Star className="h-4 w-4 mr-1 text-connect-primary" />
-                    Impact Stats
-                  </h4>
-                  <div className="grid grid-cols-2 gap-2 text-center">
-                    <div className="bg-gray-50 p-2 rounded">
-                      <span className="block text-xl font-bold text-connect-primary">0</span>
-                      <span className="text-xs text-muted-foreground">Hours</span>
-                    </div>
-                    <div className="bg-gray-50 p-2 rounded">
-                      <span className="block text-xl font-bold text-connect-primary">0</span>
-                      <span className="text-xs text-muted-foreground">Events</span>
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Recommended Opportunities */}
-            <div className="mt-6">
-              <RecommendedOpportunities />
-            </div>
-          </div>
-          
-          {/* Right Column - Activity & Saved */}
-          <div className="md:col-span-2">
-            <Card className="h-full">
-              <Tabs defaultValue={activeTab} value={activeTab} onValueChange={setActiveTab} className="h-full flex flex-col">
-                <div className="px-6 pt-6">
-                  <TabsList className="grid w-full grid-cols-2">
-                    <TabsTrigger value="recommendations">Your Activities</TabsTrigger>
-                    <TabsTrigger value="saved">Saved Opportunities</TabsTrigger>
-                  </TabsList>
-                </div>
-                
-                <TabsContent value="recommendations" className="flex-1 p-6">
-                  <div className="space-y-6">
-                    <div>
-                      <h3 className="text-lg font-semibold mb-4 flex items-center">
-                        <Calendar className="h-5 w-5 mr-2 text-connect-primary" />
-                        Upcoming Events
-                      </h3>
-                      
-                      {upcomingEvents.length > 0 ? (
-                        <div className="space-y-3">
-                          {upcomingEvents.map(event => (
-                            <div key={event.id} className="flex items-center p-3 border rounded hover:bg-gray-50 transition-colors">
-                              <div className="bg-gray-100 rounded-md h-12 w-12 flex items-center justify-center mr-4">
-                                <Calendar className="h-6 w-6 text-connect-primary" />
-                              </div>
-                              <div className="flex-1">
-                                <h4 className="font-medium text-sm">{event.title}</h4>
-                                <div className="flex flex-wrap text-xs text-muted-foreground mt-1">
-                                  <span className="mr-3">{event.date}</span>
-                                  <span className="mr-3">•</span>
-                                  <span>{event.location}</span>
-                                </div>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      ) : (
-                        <div className="text-center py-8 text-muted-foreground">
-                          <Calendar className="h-12 w-12 mx-auto mb-3 opacity-20" />
-                          <p>You have no upcoming events</p>
-                          <p className="text-sm mt-1">Browse opportunities to get involved!</p>
-                        </div>
-                      )}
-                    </div>
-
-                    <div>
-                      <h3 className="text-lg font-semibold mb-4">Past Activity</h3>
-                      <div className="text-center py-8 text-muted-foreground">
-                        <p>No past activities yet</p>
-                        <p className="text-sm mt-1">Your volunteering history will appear here</p>
-                      </div>
-                    </div>
-                  </div>
-                </TabsContent>
-                
-                <TabsContent value="saved" className="flex-1 p-6">
+        {/* Right Column - Activity & Saved */}
+        <div className="md:col-span-2">
+          <Card className="h-full">
+            <Tabs defaultValue={activeTab} value={activeTab} onValueChange={setActiveTab} className="h-full flex flex-col">
+              <div className="px-6 pt-6">
+                <TabsList className="grid w-full grid-cols-2">
+                  <TabsTrigger value="recommendations">Your Activities</TabsTrigger>
+                  <TabsTrigger value="saved">Saved Opportunities</TabsTrigger>
+                </TabsList>
+              </div>
+              
+              <TabsContent value="recommendations" className="flex-1 p-6">
+                <div className="space-y-6">
                   <div>
                     <h3 className="text-lg font-semibold mb-4 flex items-center">
-                      <BookmarkPlus className="h-5 w-5 mr-2 text-connect-primary" />
-                      Saved Opportunities
+                      <Calendar className="h-5 w-5 mr-2 text-connect-primary" />
+                      Upcoming Events
                     </h3>
                     
-                    {savedOpportunities.length > 0 ? (
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        {savedOpportunities.map(opportunity => (
-                          <div key={opportunity.id} className="border rounded hover:bg-gray-50 transition-colors p-4">
-                            <Badge variant="outline" className="mb-2">{opportunity.category}</Badge>
-                            <h4 className="font-semibold text-sm mb-1">{opportunity.title}</h4>
-                            <p className="text-xs text-muted-foreground mb-2">{opportunity.organization}</p>
-                            <div className="flex items-center text-xs text-muted-foreground">
-                              <Calendar className="h-3 w-3 mr-1" />
-                              <span className="mr-3">{opportunity.date}</span>
-                              <MapPin className="h-3 w-3 mr-1" />
-                              <span>{opportunity.location}</span>
+                    {upcomingEvents.length > 0 ? (
+                      <div className="space-y-3">
+                        {upcomingEvents.map(event => (
+                          <div key={event.id} className="flex items-center p-3 border rounded hover:bg-gray-50 transition-colors">
+                            <div className="bg-gray-100 rounded-md h-12 w-12 flex items-center justify-center mr-4">
+                              <Calendar className="h-6 w-6 text-connect-primary" />
+                            </div>
+                            <div className="flex-1">
+                              <h4 className="font-medium text-sm">{event.title}</h4>
+                              <div className="flex flex-wrap text-xs text-muted-foreground mt-1">
+                                <span className="mr-3">{event.date}</span>
+                                <span className="mr-3">•</span>
+                                <span>{event.location}</span>
+                              </div>
                             </div>
                           </div>
                         ))}
                       </div>
                     ) : (
                       <div className="text-center py-8 text-muted-foreground">
-                        <BookmarkPlus className="h-12 w-12 mx-auto mb-3 opacity-20" />
-                        <p>No saved opportunities yet</p>
-                        <p className="text-sm mt-1">Browse and bookmark opportunities you're interested in</p>
+                        <Calendar className="h-12 w-12 mx-auto mb-3 opacity-20" />
+                        <p>You have no upcoming events</p>
+                        <p className="text-sm mt-1">Browse opportunities to get involved!</p>
                       </div>
                     )}
                   </div>
-                </TabsContent>
-              </Tabs>
-            </Card>
-          </div>
+
+                  <div>
+                    <h3 className="text-lg font-semibold mb-4">Past Activity</h3>
+                    <div className="text-center py-8 text-muted-foreground">
+                      <p>No past activities yet</p>
+                      <p className="text-sm mt-1">Your volunteering history will appear here</p>
+                    </div>
+                  </div>
+                </div>
+              </TabsContent>
+              
+              <TabsContent value="saved" className="flex-1 p-6">
+                <div>
+                  <h3 className="text-lg font-semibold mb-4 flex items-center">
+                    <BookmarkPlus className="h-5 w-5 mr-2 text-connect-primary" />
+                    Saved Opportunities
+                  </h3>
+                  
+                  {savedOpportunities.length > 0 ? (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {savedOpportunities.map(opportunity => (
+                        <div key={opportunity.id} className="border rounded hover:bg-gray-50 transition-colors p-4">
+                          <Badge variant="outline" className="mb-2">{opportunity.category}</Badge>
+                          <h4 className="font-semibold text-sm mb-1">{opportunity.title}</h4>
+                          <p className="text-xs text-muted-foreground mb-2">{opportunity.organization}</p>
+                          <div className="flex items-center text-xs text-muted-foreground">
+                            <Calendar className="h-3 w-3 mr-1" />
+                            <span className="mr-3">{opportunity.date}</span>
+                            <MapPin className="h-3 w-3 mr-1" />
+                            <span>{opportunity.location}</span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-center py-8 text-muted-foreground">
+                      <BookmarkPlus className="h-12 w-12 mx-auto mb-3 opacity-20" />
+                      <p>No saved opportunities yet</p>
+                      <p className="text-sm mt-1">Browse and bookmark opportunities you're interested in</p>
+                    </div>
+                  )}
+                </div>
+              </TabsContent>
+            </Tabs>
+          </Card>
         </div>
-      </main>
+      </div>
     </div>
   );
 };

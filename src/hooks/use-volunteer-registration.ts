@@ -7,25 +7,29 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { 
   volunteerRegistrationSchema, 
-  VolunteerRegistrationFormValues 
+  ngoRegistrationSchema,
+  VolunteerRegistrationFormValues,
+  NGORegistrationFormValues 
 } from "@/schemas/volunteerRegistrationSchema";
 
 interface UseVolunteerRegistrationProps {
-  ngoId: string;
-  ngoName: string;
+  ngoId?: string;
+  ngoName?: string;
   onClose: () => void;
+  registrationType: "volunteer" | "ngo";
 }
 
 export const useVolunteerRegistration = ({ 
   ngoId, 
   ngoName, 
-  onClose 
+  onClose,
+  registrationType
 }: UseVolunteerRegistrationProps) => {
   const { user, profile } = useAuth();
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const form = useForm<VolunteerRegistrationFormValues>({
+  const volunteerForm = useForm<VolunteerRegistrationFormValues>({
     resolver: zodResolver(volunteerRegistrationSchema),
     defaultValues: {
       name: profile?.full_name || "",
@@ -33,14 +37,33 @@ export const useVolunteerRegistration = ({
       phone: "",
       interest: "",
       availability: "",
+      skills: "",
+      experience: "",
+      additionalInfo: "",
     },
   });
 
-  const onSubmit = async (values: VolunteerRegistrationFormValues) => {
+  const ngoForm = useForm<NGORegistrationFormValues>({
+    resolver: zodResolver(ngoRegistrationSchema),
+    defaultValues: {
+      name: profile?.ngo_name || "",
+      email: user?.email || "",
+      phone: "",
+      website: profile?.ngo_website || "",
+      description: profile?.ngo_description || "",
+      certificate: "",
+      additionalInfo: "",
+    },
+  });
+
+  // Choose the appropriate form based on registration type
+  const form = registrationType === "volunteer" ? volunteerForm : ngoForm;
+
+  const onSubmit = async (values: VolunteerRegistrationFormValues | NGORegistrationFormValues) => {
     if (!user) {
       toast({
         title: "Authentication required",
-        description: "Please sign in to register as a volunteer",
+        description: "Please sign in to register",
         variant: "destructive",
       });
       onClose();
@@ -50,58 +73,105 @@ export const useVolunteerRegistration = ({
     setIsSubmitting(true);
 
     try {
-      // First, check if the user is already registered with this NGO
-      const { data: existingRegistration, error: checkError } = await supabase
-        .from("volunteer_registrations")
-        .select("*")
-        .eq("volunteer_id", user.id)
-        .eq("ngo_id", ngoId)
-        .single();
+      if (registrationType === "volunteer" && ngoId) {
+        // Volunteer registration with a specific NGO
+        const volunteerValues = values as VolunteerRegistrationFormValues;
+        
+        // Check if already registered with this NGO
+        const { data: existingRegistration, error: checkError } = await supabase
+          .from("volunteer_registrations")
+          .select("*")
+          .eq("volunteer_id", user.id)
+          .eq("ngo_id", ngoId)
+          .single();
 
-      if (checkError && checkError.code !== "PGRST116") {
-        // Something went wrong other than "no rows returned"
-        throw checkError;
-      }
+        if (checkError && checkError.code !== "PGRST116") {
+          throw checkError;
+        }
 
-      if (existingRegistration) {
-        toast({
-          title: "Already registered",
-          description: "You have already registered with this organization",
-          variant: "destructive",
+        if (existingRegistration) {
+          toast({
+            title: "Already registered",
+            description: "You have already registered with this organization",
+            variant: "destructive",
+          });
+          onClose();
+          return;
+        }
+
+        // Insert new registration
+        const { error } = await supabase.from("volunteer_registrations").insert({
+          volunteer_id: user.id,
+          ngo_id: ngoId,
+          name: volunteerValues.name,
+          email: volunteerValues.email,
+          phone: volunteerValues.phone,
+          interest: volunteerValues.interest,
+          availability: volunteerValues.availability,
+          created_at: new Date().toISOString()
         });
-        onClose();
-        return;
+
+        if (error) {
+          throw error;
+        }
+        
+        toast({
+          title: "Registration submitted",
+          description: `Your volunteer application for ${ngoName} has been submitted successfully!`,
+        });
+      } 
+      else if (registrationType === "volunteer") {
+        // General volunteer registration (profile update)
+        const volunteerValues = values as VolunteerRegistrationFormValues;
+        
+        const { error } = await supabase
+          .from("profiles")
+          .update({
+            full_name: volunteerValues.name,
+            is_ngo: false,
+            updated_at: new Date().toISOString(),
+          })
+          .eq("id", user.id);
+
+        if (error) {
+          throw error;
+        }
+
+        toast({
+          title: "Registration successful",
+          description: "Your volunteer profile has been updated!",
+        });
+      } 
+      else {
+        // NGO registration
+        const ngoValues = values as NGORegistrationFormValues;
+        
+        const { error } = await supabase
+          .from("profiles")
+          .update({
+            ngo_name: ngoValues.name,
+            ngo_website: ngoValues.website,
+            ngo_description: ngoValues.description,
+            is_ngo: true,
+            updated_at: new Date().toISOString(),
+          })
+          .eq("id", user.id);
+
+        if (error) {
+          throw error;
+        }
+
+        toast({
+          title: "Registration successful",
+          description: "Your NGO profile has been created!",
+        });
       }
-
-      // Insert new registration
-      const { error } = await supabase.from("volunteer_registrations").insert({
-        volunteer_id: user.id,
-        ngo_id: ngoId,
-        name: values.name,
-        email: values.email,
-        phone: values.phone,
-        interest: values.interest,
-        availability: values.availability,
-        created_at: new Date().toISOString()
-      });
-
-      if (error) {
-        throw error;
-      }
-
-      // Note: We're not attempting to create notifications through Supabase
-      // since the 'notifications' table doesn't exist yet in the database schema
-      
-      toast({
-        title: "Registration submitted",
-        description: `Your volunteer application for ${ngoName} has been submitted successfully!`,
-      });
       
       onClose();
     } catch (error: any) {
       toast({
         title: "Registration failed",
-        description: error.message,
+        description: error.message || "An error occurred during registration",
         variant: "destructive",
       });
     } finally {

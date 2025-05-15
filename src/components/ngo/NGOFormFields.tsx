@@ -9,33 +9,13 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { 
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue
-} from "@/components/ui/select";
-import { VolunteerRegistrationFormValues } from "@/schemas/volunteerRegistrationSchema";
+import { NGORegistrationFormValues } from "@/schemas/volunteerRegistrationSchema";
 
-interface VolunteerFormFieldsProps {
-  form: UseFormReturn<VolunteerRegistrationFormValues>;
+interface NGOFormFieldsProps {
+  form: UseFormReturn<NGORegistrationFormValues>;
 }
 
-const interestAreas = [
-  "Education",
-  "Environment",
-  "Healthcare",
-  "Animal Welfare",
-  "Poverty Alleviation",
-  "Arts & Culture",
-  "Human Rights",
-  "Disaster Relief",
-  "Community Development",
-  "Other"
-];
-
-const VolunteerFormFields = ({ form }: VolunteerFormFieldsProps) => {
+const NGOFormFields = ({ form }: NGOFormFieldsProps) => {
   return (
     <>
       <FormField
@@ -43,7 +23,7 @@ const VolunteerFormFields = ({ form }: VolunteerFormFieldsProps) => {
         name="name"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>Full Name</FormLabel>
+            <FormLabel>Organization Name</FormLabel>
             <FormControl>
               <Input {...field} />
             </FormControl>
@@ -71,7 +51,7 @@ const VolunteerFormFields = ({ form }: VolunteerFormFieldsProps) => {
         name="phone"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>Phone Number (Optional)</FormLabel>
+            <FormLabel>Phone Number</FormLabel>
             <FormControl>
               <Input type="tel" {...field} />
             </FormControl>
@@ -82,24 +62,13 @@ const VolunteerFormFields = ({ form }: VolunteerFormFieldsProps) => {
 
       <FormField
         control={form.control}
-        name="interest"
+        name="website"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>Area of Interest</FormLabel>
-            <Select onValueChange={field.onChange} defaultValue={field.value}>
-              <FormControl>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select an area of interest" />
-                </SelectTrigger>
-              </FormControl>
-              <SelectContent>
-                {interestAreas.map((area) => (
-                  <SelectItem key={area} value={area}>
-                    {area}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <FormLabel>Website (Optional)</FormLabel>
+            <FormControl>
+              <Input type="url" {...field} />
+            </FormControl>
             <FormMessage />
           </FormItem>
         )}
@@ -107,13 +76,13 @@ const VolunteerFormFields = ({ form }: VolunteerFormFieldsProps) => {
 
       <FormField
         control={form.control}
-        name="skills"
+        name="description"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>Skills (Optional)</FormLabel>
+            <FormLabel>Organization Description</FormLabel>
             <FormControl>
-              <Input 
-                placeholder="e.g., Teaching, Web Design, Medical" 
+              <Textarea 
+                placeholder="Provide a brief description of your organization's mission and activities" 
                 {...field} 
               />
             </FormControl>
@@ -124,32 +93,17 @@ const VolunteerFormFields = ({ form }: VolunteerFormFieldsProps) => {
 
       <FormField
         control={form.control}
-        name="experience"
+        name="certificate"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>Previous Volunteer Experience (Optional)</FormLabel>
+            <FormLabel>80G Certificate</FormLabel>
             <FormControl>
-              <Textarea 
-                placeholder="Briefly describe any previous volunteer experience" 
-                {...field} 
-              />
-            </FormControl>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
-
-      <FormField
-        control={form.control}
-        name="availability"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>Availability</FormLabel>
-            <FormControl>
-              <Textarea 
-                placeholder="e.g., Weekends, Evenings, Remote only" 
-                {...field} 
-              />
+              <Input type="file" className="cursor-pointer" onChange={(e) => {
+                // In a real implementation, this would handle file upload
+                if (e.target.files && e.target.files[0]) {
+                  field.onChange(e.target.files[0].name);
+                }
+              }} />
             </FormControl>
             <FormMessage />
           </FormItem>
@@ -176,4 +130,4 @@ const VolunteerFormFields = ({ form }: VolunteerFormFieldsProps) => {
   );
 };
 
-export default VolunteerFormFields;
+export default NGOFormFields;
