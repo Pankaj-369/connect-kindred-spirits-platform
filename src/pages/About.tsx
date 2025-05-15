@@ -1,13 +1,9 @@
-
-import Navigation from '@/components/Navigation';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 
 const About = () => {
   return (
     <div className="min-h-screen flex flex-col">
-      <Navigation />
-      
       <main className="flex-1 container mx-auto px-4 py-8">
         <div className="max-w-3xl mx-auto">
           <h1 className="text-4xl font-bold text-center mb-4">About Connect4Good</h1>
