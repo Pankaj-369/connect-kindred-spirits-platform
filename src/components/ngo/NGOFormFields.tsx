@@ -62,6 +62,34 @@ const NGOFormFields = ({ form }: NGOFormFieldsProps) => {
 
       <FormField
         control={form.control}
+        name="registrationNumber"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>Registration Number</FormLabel>
+            <FormControl>
+              <Input {...field} />
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+
+      <FormField
+        control={form.control}
+        name="darpanId"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>NGO DARPAN ID</FormLabel>
+            <FormControl>
+              <Input {...field} />
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+
+      <FormField
+        control={form.control}
         name="website"
         render={({ field }) => (
           <FormItem>

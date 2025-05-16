@@ -52,6 +52,8 @@ export const useVolunteerRegistration = ({
       phone: "",
       website: profile?.ngo_website || "",
       description: profile?.ngo_description || "",
+      registrationNumber: "",
+      darpanId: "",
       certificate: "",
       additionalInfo: "",
     },

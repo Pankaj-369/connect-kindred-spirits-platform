@@ -38,6 +38,8 @@ export const ngoRegistrationSchema = z.object({
   phone: z.string().optional(),
   website: z.string().optional(),
   description: z.string().min(10, "Please provide a brief description of your organization"),
+  registrationNumber: z.string().min(1, "Registration number is required for verification"),
+  darpanId: z.string().min(1, "DARPAN ID is required for verification"),
   certificate: z.string().min(1, "80G certificate is required for verification"),
   additionalInfo: z.string().optional(),
 });
