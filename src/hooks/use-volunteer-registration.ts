@@ -38,7 +38,7 @@ export const useVolunteerRegistration = ({
       phone: "",
       interest: undefined as any,
       availability: "",
-      skills: "",
+      skills: [],
       experience: "",
       additionalInfo: "",
     },

@@ -1,8 +1,7 @@
-
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Loader2, CheckCircle, EyeIcon, EyeOffIcon, FileUpload } from "lucide-react";
+import { Loader2, CheckCircle, EyeIcon, EyeOffIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
