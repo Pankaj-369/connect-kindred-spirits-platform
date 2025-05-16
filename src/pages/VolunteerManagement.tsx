@@ -28,8 +28,7 @@ import {
 } from "@/components/ui/select";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { CheckCircle, XCircle, Clock, Mail, Phone, Calendar } from "lucide-react";
-import { User } from 'lucide-react'; // Make sure this import exists
+import { CheckCircle, XCircle, Clock, Mail, Phone, Calendar, User } from "lucide-react";
 
 type VolunteerRegistration = {
   id: string;
@@ -133,8 +132,7 @@ const VolunteerManagement = () => {
   // Show message if not authenticated or not an NGO
   if (!isAuthenticated) {
     return (
-      <div className="min-h-screen flex flex-col">
-        <Navigation />
+      <div className="min-h-screen">
         <main className="flex-1 container mx-auto px-4 py-8">
           <Card className="mx-auto max-w-md">
             <CardHeader>
@@ -156,8 +154,7 @@ const VolunteerManagement = () => {
 
   if (!profile?.is_ngo) {
     return (
-      <div className="min-h-screen flex flex-col">
-        <Navigation />
+      <div className="min-h-screen">
         <main className="flex-1 container mx-auto px-4 py-8">
           <Card className="mx-auto max-w-md">
             <CardHeader>
@@ -179,8 +176,7 @@ const VolunteerManagement = () => {
   }
   
   return (
-    <div className="min-h-screen flex flex-col">
-      <Navigation />
+    <div className="min-h-screen">
       <main className="flex-1 container mx-auto px-4 py-8">
         <div className="flex justify-between items-center mb-6">
           <div>
@@ -218,7 +214,7 @@ const VolunteerManagement = () => {
             ) : registrations.length === 0 ? (
               <div className="py-12 text-center">
                 <div className="mx-auto w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center">
-                  <User className="h-4 w-4 mr-2" /> // Update this line
+                  <User className="h-4 w-4 mr-2" />
                 </div>
                 <h3 className="mt-4 text-lg font-medium">No applications yet</h3>
                 <p className="mt-2 text-muted-foreground max-w-sm mx-auto">
