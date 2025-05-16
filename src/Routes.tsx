@@ -47,7 +47,7 @@ const Routes = () => {
           </AuthGuard>
         } />
         <Route path="/campaigns" element={
-          <AuthGuard allowedRoles={['ngo']}>
+          <AuthGuard>
             <Campaigns />
           </AuthGuard>
         } />

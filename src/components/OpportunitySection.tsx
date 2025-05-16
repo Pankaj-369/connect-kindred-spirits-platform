@@ -190,7 +190,7 @@ const OpportunitySection = () => {
       {/* Registration Form Dialog */}
       {selectedOpportunity && (
         <VolunteerRegistrationForm
-          ngoId={selectedOpportunity.organizationId}
+          ngoId={selectedOpportunity.organizationId.toString()}
           ngoName={selectedOpportunity.organization}
           isOpen={isRegistrationFormOpen}
           onClose={handleCloseRegistrationForm}

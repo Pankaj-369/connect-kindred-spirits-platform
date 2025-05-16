@@ -100,19 +100,22 @@ export const useVolunteerRegistration = ({
           return;
         }
 
-        // Insert new registration
+        // Insert new registration - ensure ngoId is properly formatted
         const { error } = await supabase.from("volunteer_registrations").insert({
           volunteer_id: user.id,
-          ngo_id: ngoId,
+          ngo_id: ngoId.toString(), // Ensure ngoId is a string
           name: volunteerValues.name,
           email: volunteerValues.email,
-          phone: volunteerValues.phone,
-          interest: volunteerValues.interest,
-          availability: volunteerValues.availability,
-          created_at: new Date().toISOString()
+          phone: volunteerValues.phone || null,
+          interest: volunteerValues.interest || null,
+          availability: volunteerValues.availability || null,
+          status: 'pending',
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
         });
 
         if (error) {
+          console.error("Registration error:", error);
           throw error;
         }
         

@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { Menu, X, User, LogIn, LogOut, Home, Calendar, Users } from 'lucide-react';
@@ -117,40 +116,38 @@ const Navigation = () => {
             {/* Authenticated and role-specific links */}
             {isAuthenticated && (
               <>
+                <NavLink
+                  to="/campaigns"
+                  className={({ isActive }) =>
+                    cn(
+                      "px-3 py-2 rounded-md text-sm font-medium transition-colors flex items-center",
+                      isActive
+                        ? "bg-connect-primary text-white"
+                        : "text-gray-600 hover:bg-gray-100"
+                    )
+                  }
+                  onClick={closeMenu}
+                >
+                  <Calendar className="h-4 w-4 mr-1" />
+                  Campaigns
+                </NavLink>
+                
                 {isNGO && (
-                  <>
-                    <NavLink
-                      to="/campaigns"
-                      className={({ isActive }) =>
-                        cn(
-                          "px-3 py-2 rounded-md text-sm font-medium transition-colors flex items-center",
-                          isActive
-                            ? "bg-connect-primary text-white"
-                            : "text-gray-600 hover:bg-gray-100"
-                        )
-                      }
-                      onClick={closeMenu}
-                    >
-                      <Calendar className="h-4 w-4 mr-1" />
-                      Manage Campaigns
-                    </NavLink>
-                    
-                    <NavLink
-                      to="/volunteer-management"
-                      className={({ isActive }) =>
-                        cn(
-                          "px-3 py-2 rounded-md text-sm font-medium transition-colors flex items-center",
-                          isActive
-                            ? "bg-connect-primary text-white"
-                            : "text-gray-600 hover:bg-gray-100"
-                        )
-                      }
-                      onClick={closeMenu}
-                    >
-                      <Users className="h-4 w-4 mr-1" />
-                      Volunteers
-                    </NavLink>
-                  </>
+                  <NavLink
+                    to="/volunteer-management"
+                    className={({ isActive }) =>
+                      cn(
+                        "px-3 py-2 rounded-md text-sm font-medium transition-colors flex items-center",
+                        isActive
+                          ? "bg-connect-primary text-white"
+                          : "text-gray-600 hover:bg-gray-100"
+                      )
+                    }
+                    onClick={closeMenu}
+                  >
+                    <Users className="h-4 w-4 mr-1" />
+                    Volunteers
+                  </NavLink>
                 )}
                 
                 <NavLink
@@ -320,40 +317,38 @@ const Navigation = () => {
             {/* Authenticated and role-specific links */}
             {isAuthenticated && (
               <>
+                <NavLink
+                  to="/campaigns"
+                  className={({ isActive }) =>
+                    cn(
+                      "block px-3 py-2 rounded-md text-base font-medium flex items-center",
+                      isActive
+                        ? "bg-connect-primary text-white"
+                        : "text-gray-600 hover:bg-gray-100"
+                    )
+                  }
+                  onClick={closeMenu}
+                >
+                  <Calendar className="h-4 w-4 mr-2" />
+                  Campaigns
+                </NavLink>
+                
                 {isNGO && (
-                  <>
-                    <NavLink
-                      to="/campaigns"
-                      className={({ isActive }) =>
-                        cn(
-                          "block px-3 py-2 rounded-md text-base font-medium flex items-center",
-                          isActive
-                            ? "bg-connect-primary text-white"
-                            : "text-gray-600 hover:bg-gray-100"
-                        )
-                      }
-                      onClick={closeMenu}
-                    >
-                      <Calendar className="h-4 w-4 mr-2" />
-                      Manage Campaigns
-                    </NavLink>
-                    
-                    <NavLink
-                      to="/volunteer-management"
-                      className={({ isActive }) =>
-                        cn(
-                          "block px-3 py-2 rounded-md text-base font-medium flex items-center",
-                          isActive
-                            ? "bg-connect-primary text-white"
-                            : "text-gray-600 hover:bg-gray-100"
-                        )
-                      }
-                      onClick={closeMenu}
-                    >
-                      <Users className="h-4 w-4 mr-2" />
-                      Volunteers
-                    </NavLink>
-                  </>
+                  <NavLink
+                    to="/volunteer-management"
+                    className={({ isActive }) =>
+                      cn(
+                        "block px-3 py-2 rounded-md text-base font-medium flex items-center",
+                        isActive
+                          ? "bg-connect-primary text-white"
+                          : "text-gray-600 hover:bg-gray-100"
+                      )
+                    }
+                    onClick={closeMenu}
+                  >
+                    <Users className="h-4 w-4 mr-2" />
+                    Volunteers
+                  </NavLink>
                 )}
                 
                 <NavLink
