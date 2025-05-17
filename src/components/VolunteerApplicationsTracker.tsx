@@ -70,8 +70,11 @@ const VolunteerApplicationsTracker = () => {
         if (error) {
           console.error('Error fetching applications:', error);
           toast.error('Failed to load your applications');
+        } else if (data) {
+          // Use type assertion with unknown as an intermediate step for safer casting
+          setApplications((data as unknown) as Application[]);
         } else {
-          setApplications(data as Application[] || []);
+          setApplications([]);
         }
       } catch (err) {
         console.error('Error in application loading:', err);

@@ -84,11 +84,13 @@ const DriveApplicationsManagement = () => {
 
       // Create a mapping of drive ID to drive
       const drivesMap: Record<string, Drive> = {};
-      drivesData?.forEach((drive: any) => {
-        if (drive.id && UUID_REGEX.test(drive.id)) {
-          drivesMap[drive.id] = drive;
-        }
-      });
+      if (drivesData) {
+        (drivesData as any[]).forEach((drive: any) => {
+          if (drive.id && UUID_REGEX.test(drive.id)) {
+            drivesMap[drive.id] = drive as Drive;
+          }
+        });
+      }
 
       setDrives(drivesMap);
       
@@ -100,7 +102,7 @@ const DriveApplicationsManagement = () => {
       }
       
       // 2. Fetch applications for these drives
-      const driveIds = drivesData.map((d: any) => d.id).filter(id => UUID_REGEX.test(id));
+      const driveIds = (drivesData as any[]).map((d: any) => d.id).filter(id => UUID_REGEX.test(id));
       
       if (!driveIds.length) {
         setApplications([]);
@@ -116,8 +118,11 @@ const DriveApplicationsManagement = () => {
       if (applicationsError) {
         console.error('Error fetching applications:', applicationsError);
         toast.error('Failed to load volunteer applications');
+      } else if (applicationsData) {
+        // Use type assertion with unknown as an intermediate step for safer casting
+        setApplications((applicationsData as unknown) as Application[]);
       } else {
-        setApplications(applicationsData as Application[] || []);
+        setApplications([]);
       }
       
       setLoading(false);
@@ -206,7 +211,7 @@ const DriveApplicationsManagement = () => {
                 </TableHeader>
                 <TableBody>
                   {filteredApplications.map((application) => {
-                    const drive = drives[application.drive_id] || {};
+                    const drive = drives[application.drive_id] || {} as Drive;
                     return (
                       <TableRow key={application.id}>
                         <TableCell>
