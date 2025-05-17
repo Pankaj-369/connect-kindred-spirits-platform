@@ -2,15 +2,15 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import OpportunityCard from './OpportunityCard';
-import VolunteerRegistrationForm from './VolunteerRegistrationForm';
+import DriveApplicationForm from './DriveApplicationForm';
 import { Button } from './ui/button';
 import { Search, ArrowRight } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 
-// Sample data for opportunities
+// Sample data for opportunities (now representing drives from the database)
 const opportunities = [
   {
-    id: 1,
+    id: '123e4567-e89b-12d3-a456-426614174000', // Using UUID format
     title: 'Beach Cleanup Drive',
     organization: 'Ocean Conservancy',
     location: 'Miami, FL',
@@ -21,7 +21,7 @@ const opportunities = [
     organizationId: '201'
   },
   {
-    id: 2,
+    id: '223e4567-e89b-12d3-a456-426614174001', // Using UUID format
     title: 'Homeless Shelter Assistance',
     organization: 'City Hope Foundation',
     location: 'Portland, OR',
@@ -32,7 +32,7 @@ const opportunities = [
     organizationId: '202'
   },
   {
-    id: 3,
+    id: '323e4567-e89b-12d3-a456-426614174002', // Using UUID format
     title: 'After-School Tutoring',
     organization: 'Bright Futures',
     location: 'Chicago, IL',
@@ -43,7 +43,7 @@ const opportunities = [
     organizationId: '203'
   },
   {
-    id: 4,
+    id: '423e4567-e89b-12d3-a456-426614174003', // Using UUID format
     title: 'Wildlife Conservation Project',
     organization: 'Wildlife Protection Society',
     location: 'Denver, CO',
@@ -54,7 +54,7 @@ const opportunities = [
     organizationId: '104'
   },
   {
-    id: 5,
+    id: '523e4567-e89b-12d3-a456-426614174004', // Using UUID format
     title: 'Food Bank Assistant',
     organization: 'Community Food Network',
     location: 'Austin, TX',
@@ -65,7 +65,7 @@ const opportunities = [
     organizationId: '105'
   },
   {
-    id: 6,
+    id: '623e4567-e89b-12d3-a456-426614174005', // Using UUID format
     title: 'Senior Home Visit Program',
     organization: 'Elder Care Alliance',
     location: 'Seattle, WA',
@@ -84,8 +84,8 @@ const OpportunitySection = () => {
   const { isAuthenticated } = useAuth();
   const [activeFilter, setActiveFilter] = useState('All');
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedOpportunity, setSelectedOpportunity] = useState<any | null>(null);
-  const [isRegistrationFormOpen, setIsRegistrationFormOpen] = useState(false);
+  const [selectedDrive, setSelectedDrive] = useState<any | null>(null);
+  const [isApplicationFormOpen, setIsApplicationFormOpen] = useState(false);
 
   const filteredOpportunities = opportunities.filter(opportunity => {
     // Filter by category
@@ -102,18 +102,18 @@ const OpportunitySection = () => {
     return true;
   });
 
-  const handleApply = (opportunity: any) => {
+  const handleApply = (drive: any) => {
     if (!isAuthenticated) {
       navigate('/auth', { state: { returnTo: '/opportunities' } });
       return;
     }
-    setSelectedOpportunity(opportunity);
-    setIsRegistrationFormOpen(true);
+    setSelectedDrive(drive);
+    setIsApplicationFormOpen(true);
   };
 
-  const handleCloseRegistrationForm = () => {
-    setIsRegistrationFormOpen(false);
-    setSelectedOpportunity(null);
+  const handleCloseApplicationForm = () => {
+    setIsApplicationFormOpen(false);
+    setSelectedDrive(null);
   };
 
   return (
@@ -187,13 +187,13 @@ const OpportunitySection = () => {
         </div>
       </div>
 
-      {/* Registration Form Dialog */}
-      {selectedOpportunity && (
-        <VolunteerRegistrationForm
-          ngoId={selectedOpportunity.organizationId.toString()}
-          ngoName={selectedOpportunity.organization}
-          isOpen={isRegistrationFormOpen}
-          onClose={handleCloseRegistrationForm}
+      {/* Application Form Dialog */}
+      {selectedDrive && (
+        <DriveApplicationForm
+          driveId={selectedDrive.id}
+          driveTitle={selectedDrive.title}
+          isOpen={isApplicationFormOpen}
+          onClose={handleCloseApplicationForm}
         />
       )}
     </section>

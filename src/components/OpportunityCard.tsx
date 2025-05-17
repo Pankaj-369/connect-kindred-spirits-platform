@@ -6,7 +6,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 
 interface OpportunityCardProps {
-  id: number;
+  id: string; // Changed to string for UUID
   title: string;
   organization: string;
   location: string;
@@ -35,7 +35,7 @@ const OpportunityCard = ({
   const { toast } = useToast();
   
   const handleViewDetails = () => {
-    navigate(`/ngo/${organizationId || id}`);
+    navigate(`/ngo/${organizationId}`);
   };
 
   const handleApply = () => {
