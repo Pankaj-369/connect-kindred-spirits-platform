@@ -46,7 +46,7 @@ const DriveApplicationsManagement = () => {
       
       // 1. First fetch NGO's drives
       const { data: drivesData, error: drivesError } = await supabase
-        .from('drives')
+        .from('drives' as any)
         .select('*')
         .eq('ngo_id', user.id);
       
@@ -84,7 +84,7 @@ const DriveApplicationsManagement = () => {
       }
       
       const { data: applicationsData, error: applicationsError } = await supabase
-        .from('drive_applications')
+        .from('drive_applications' as any)
         .select('*')
         .in('drive_id', driveIds);
       
@@ -101,7 +101,7 @@ const DriveApplicationsManagement = () => {
     loadData();
   }, [user]);
 
-  const updateApplicationStatus = async (applicationId: string, status: 'approved' | 'rejected') => {
+  const updateApplicationStatus = async (applicationId: string, status: 'approved' | 'rejected' | 'pending') => {
     // Validate application ID
     if (!applicationId || !UUID_REGEX.test(applicationId)) {
       toast.error('Invalid application ID');
@@ -109,7 +109,7 @@ const DriveApplicationsManagement = () => {
     }
     
     const { error } = await supabase
-      .from('drive_applications')
+      .from('drive_applications' as any)
       .update({ 
         status,
         updated_at: new Date().toISOString() 
@@ -129,7 +129,7 @@ const DriveApplicationsManagement = () => {
       )
     );
     
-    toast.success(`Application ${status === 'approved' ? 'approved' : 'rejected'} successfully`);
+    toast.success(`Application ${status === 'approved' ? 'approved' : status === 'rejected' ? 'rejected' : 'reset to pending'} successfully`);
   };
 
   const filteredApplications = applications.filter(app => app.status === activeTab);
@@ -237,10 +237,7 @@ const DriveApplicationsManagement = () => {
                             <Button
                               size="sm"
                               variant="ghost"
-                              onClick={() => {
-                                // Using a type cast to fix the TypeScript error
-                                updateApplicationStatus(application.id, 'pending' as 'approved' | 'rejected');
-                              }}
+                              onClick={() => updateApplicationStatus(application.id, 'pending')}
                             >
                               Reset Status
                             </Button>

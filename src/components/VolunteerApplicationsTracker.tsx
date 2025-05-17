@@ -33,12 +33,10 @@ const VolunteerApplicationsTracker = () => {
       setLoading(true);
       
       // Using any type to avoid TypeScript issues with the new tables
-      const { data, error } = await supabase.rpc('get_volunteer_applications', {
-        volunteer_id: user.id
-      }).then(async () => {
-        // Fallback if the RPC doesn't exist - direct query approach
-        return await supabase
-          .from('drive_applications')
+      try {
+        // First try the direct query since we've already created the tables
+        const { data, error } = await supabase
+          .from('drive_applications' as any)
           .select(`
             *,
             drives:drive_id (
@@ -49,13 +47,16 @@ const VolunteerApplicationsTracker = () => {
             )
           `)
           .eq('volunteer_id', user.id);
-      });
-      
-      if (error) {
-        console.error('Error fetching applications:', error);
+        
+        if (error) {
+          console.error('Error fetching applications:', error);
+          toast.error('Failed to load your applications');
+        } else {
+          setApplications(data || []);
+        }
+      } catch (err) {
+        console.error('Error in application loading:', err);
         toast.error('Failed to load your applications');
-      } else {
-        setApplications(data || []);
       }
       
       setLoading(false);
