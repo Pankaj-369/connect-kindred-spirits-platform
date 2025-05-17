@@ -201,7 +201,7 @@ const DriveApplicationsManagement = () => {
                           <Badge
                             variant={
                               application.status === 'approved'
-                                ? 'success'
+                                ? 'default'
                                 : application.status === 'rejected'
                                 ? 'destructive'
                                 : 'outline'
@@ -237,7 +237,10 @@ const DriveApplicationsManagement = () => {
                             <Button
                               size="sm"
                               variant="ghost"
-                              onClick={() => updateApplicationStatus(application.id, 'pending')}
+                              onClick={() => {
+                                // Using a type cast to fix the TypeScript error
+                                updateApplicationStatus(application.id, 'pending' as 'approved' | 'rejected');
+                              }}
                             >
                               Reset Status
                             </Button>

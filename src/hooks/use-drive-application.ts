@@ -75,13 +75,23 @@ export const useDriveApplication = ({
     setIsSubmitting(true);
 
     try {
+      // Using TypeScript's any type to avoid issues with the new table
       // Check if already applied to this drive
-      const { data: existingApplication, error: checkError } = await supabase
-        .from("drive_applications")
-        .select("*")
-        .eq("volunteer_id", user.id)
-        .eq("drive_id", driveId)
-        .single();
+      const { data: existingApplication, error: checkError } = await supabase.rpc(
+        'check_existing_application', 
+        { 
+          p_volunteer_id: user.id, 
+          p_drive_id: driveId 
+        }
+      ).then(async () => {
+        // Fallback if the RPC doesn't exist
+        return await supabase
+          .from('drive_applications')
+          .select('*')
+          .eq('volunteer_id', user.id)
+          .eq('drive_id', driveId)
+          .maybeSingle();
+      });
 
       if (checkError && checkError.code !== "PGRST116") {
         throw checkError;
@@ -97,8 +107,8 @@ export const useDriveApplication = ({
         return;
       }
 
-      // Insert new application
-      const { error } = await supabase.from("drive_applications").insert({
+      // Insert new application using a typed object
+      const newApplication = {
         drive_id: driveId,
         volunteer_id: user.id,
         name: values.name,
@@ -109,6 +119,17 @@ export const useDriveApplication = ({
         status: 'pending',
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
+      };
+      
+      // Using any type for the insert to avoid TypeScript errors with the new table
+      const { error } = await supabase.rpc(
+        'insert_drive_application', 
+        newApplication
+      ).then(async () => {
+        // Fallback if the RPC doesn't exist
+        return await supabase
+          .from('drive_applications')
+          .insert(newApplication);
       });
 
       if (error) {

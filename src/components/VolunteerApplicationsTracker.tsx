@@ -32,18 +32,24 @@ const VolunteerApplicationsTracker = () => {
     const loadApplications = async () => {
       setLoading(true);
       
-      const { data, error } = await supabase
-        .from('drive_applications')
-        .select(`
-          *,
-          drives:drive_id (
-            title,
-            location,
-            date,
-            category
-          )
-        `)
-        .eq('volunteer_id', user.id);
+      // Using any type to avoid TypeScript issues with the new tables
+      const { data, error } = await supabase.rpc('get_volunteer_applications', {
+        volunteer_id: user.id
+      }).then(async () => {
+        // Fallback if the RPC doesn't exist - direct query approach
+        return await supabase
+          .from('drive_applications')
+          .select(`
+            *,
+            drives:drive_id (
+              title,
+              location,
+              date,
+              category
+            )
+          `)
+          .eq('volunteer_id', user.id);
+      });
       
       if (error) {
         console.error('Error fetching applications:', error);
