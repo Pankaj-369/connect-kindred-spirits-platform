@@ -21,9 +21,30 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Calendar, MapPin } from 'lucide-react';
 
+// Define interface for application to avoid TypeScript errors
+interface Application {
+  id: string;
+  drive_id: string;
+  volunteer_id: string;
+  name: string;
+  email: string;
+  phone: string | null;
+  interest: string | null;
+  availability: string | null;
+  status: string;
+  created_at: string;
+  updated_at: string;
+  drives?: {
+    title: string;
+    location: string;
+    date: string;
+    category: string;
+  };
+}
+
 const VolunteerApplicationsTracker = () => {
   const { user } = useAuth();
-  const [applications, setApplications] = useState<any[]>([]);
+  const [applications, setApplications] = useState<Application[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -32,9 +53,7 @@ const VolunteerApplicationsTracker = () => {
     const loadApplications = async () => {
       setLoading(true);
       
-      // Using any type to avoid TypeScript issues with the new tables
       try {
-        // First try the direct query since we've already created the tables
         const { data, error } = await supabase
           .from('drive_applications' as any)
           .select(`
@@ -52,7 +71,7 @@ const VolunteerApplicationsTracker = () => {
           console.error('Error fetching applications:', error);
           toast.error('Failed to load your applications');
         } else {
-          setApplications(data || []);
+          setApplications(data as Application[] || []);
         }
       } catch (err) {
         console.error('Error in application loading:', err);

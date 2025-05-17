@@ -27,6 +27,20 @@ interface UseDriveApplicationProps {
   onClose: () => void;
 }
 
+// Define the interface for application data to avoid TypeScript errors
+interface DriveApplication {
+  drive_id: string;
+  volunteer_id: string;
+  name: string;
+  email: string;
+  phone: string | null;
+  interest: string | null;
+  availability: string | null;
+  status: string;
+  created_at: string;
+  updated_at: string;
+}
+
 export const useDriveApplication = ({ 
   driveId, 
   driveTitle, 
@@ -102,7 +116,7 @@ export const useDriveApplication = ({
       }
 
       // Insert new application using a typed object
-      const newApplication = {
+      const newApplication: Omit<DriveApplication, 'id'> = {
         drive_id: driveId,
         volunteer_id: user.id,
         name: values.name,

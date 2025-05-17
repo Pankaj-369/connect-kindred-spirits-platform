@@ -31,12 +31,37 @@ import { Check, X, AlertCircle, User } from 'lucide-react';
 // UUID validation regex
 const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
+// Define the type for applications to avoid TypeScript errors
+interface Application {
+  id: string;
+  drive_id: string;
+  volunteer_id: string;
+  name: string;
+  email: string;
+  phone: string | null;
+  interest: string | null;
+  availability: string | null;
+  status: 'pending' | 'approved' | 'rejected';
+  created_at: string;
+  updated_at: string;
+}
+
+// Define the type for drives
+interface Drive {
+  id: string;
+  title: string;
+  location: string;
+  date: string;
+  ngo_id: string;
+  [key: string]: any; // For additional properties
+}
+
 const DriveApplicationsManagement = () => {
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState('pending');
-  const [applications, setApplications] = useState<any[]>([]);
+  const [applications, setApplications] = useState<Application[]>([]);
   const [loading, setLoading] = useState(true);
-  const [drives, setDrives] = useState<Record<string, any>>({});
+  const [drives, setDrives] = useState<Record<string, Drive>>({});
 
   useEffect(() => {
     if (!user) return;
@@ -58,8 +83,8 @@ const DriveApplicationsManagement = () => {
       }
 
       // Create a mapping of drive ID to drive
-      const drivesMap: Record<string, any> = {};
-      drivesData?.forEach(drive => {
+      const drivesMap: Record<string, Drive> = {};
+      drivesData?.forEach((drive: any) => {
         if (drive.id && UUID_REGEX.test(drive.id)) {
           drivesMap[drive.id] = drive;
         }
@@ -75,7 +100,7 @@ const DriveApplicationsManagement = () => {
       }
       
       // 2. Fetch applications for these drives
-      const driveIds = drivesData.map(d => d.id).filter(id => UUID_REGEX.test(id));
+      const driveIds = drivesData.map((d: any) => d.id).filter(id => UUID_REGEX.test(id));
       
       if (!driveIds.length) {
         setApplications([]);
@@ -92,7 +117,7 @@ const DriveApplicationsManagement = () => {
         console.error('Error fetching applications:', applicationsError);
         toast.error('Failed to load volunteer applications');
       } else {
-        setApplications(applicationsData || []);
+        setApplications(applicationsData as Application[] || []);
       }
       
       setLoading(false);
