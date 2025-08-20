@@ -6,7 +6,6 @@ import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
-import Navigation from "@/components/Navigation";
 import { Badge } from "@/components/ui/badge";
 import { Check } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
@@ -93,7 +92,7 @@ const Auth = () => {
 
   return (
     <div className="min-h-screen flex flex-col">
-      <Navigation />
+      {/* Removed <Navigation /> to avoid duplicate navbar */}
       <div className="flex-1 container mx-auto flex items-center justify-center py-8">
         <Card className="w-full max-w-md">
           <Tabs defaultValue={activeTab} value={activeTab} onValueChange={setActiveTab}>
