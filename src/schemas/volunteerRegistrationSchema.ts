@@ -48,7 +48,7 @@ export const volunteerRegistrationSchema = z.object({
   gender: z.enum(genderOptions, {
     errorMap: () => ({ message: "Please select your gender" })
   }),
-  skills: z.array(z.string()).min(1, "Please select at least one skill"),
+  skills: z.array(z.string()).optional(),
   interest: z.enum(interestAreas, {
     errorMap: () => ({ message: "Please select an area of interest" })
   }),

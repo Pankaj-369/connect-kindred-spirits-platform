@@ -2,7 +2,7 @@
 import { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import DriveApplicationsManagement from '@/components/DriveApplicationsManagement';
+import CampaignApplicationsManagement from '@/components/CampaignApplicationsManagement';
 
 const VolunteerManagement = () => {
   const [activeTab, setActiveTab] = useState('applications');
@@ -22,7 +22,7 @@ const VolunteerManagement = () => {
             Review and manage applications from volunteers for your opportunities.
           </p>
           
-          <DriveApplicationsManagement />
+          <CampaignApplicationsManagement />
         </TabsContent>
         
         <TabsContent value="volunteers" className="space-y-4">

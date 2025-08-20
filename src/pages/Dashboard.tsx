@@ -8,7 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Calendar, MapPin, Heart, Star, BookmarkPlus } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import NotificationCenter from '@/components/NotificationCenter';
-import VolunteerApplicationsTracker from '@/components/VolunteerApplicationsTracker';
+import VolunteerCampaignApplications from '@/components/VolunteerCampaignApplications';
 
 const Dashboard = () => {
   const { isAuthenticated, profile } = useAuth();
@@ -197,7 +197,7 @@ const Dashboard = () => {
                   <div className="space-y-6">
                     <div>
                       <h3 className="text-lg font-semibold mb-4">Your Applications</h3>
-                      <VolunteerApplicationsTracker />
+                      <VolunteerCampaignApplications />
                     </div>
                     
                     <div>

@@ -1,7 +1,8 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import VolunteerRegistrationForm from '@/components/VolunteerRegistrationForm';
+import CampaignApplicationForm from '@/components/CampaignApplicationForm';
+import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -13,151 +14,131 @@ import {
 } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/contexts/AuthContext';
+import { Calendar, MapPin } from 'lucide-react';
 
-type Opportunity = {
-  id: number;
+type Campaign = {
+  id: string;
+  ngo_id: string;
   title: string;
-  organization: string;
-  organizationId: string;
-  location: string;
-  commitment: string;
-  category: string;
-  description: string;
-  requirements: string[];
+  description: string | null;
+  location: string | null;
+  date: string | null;
+  goal: string | null;
+  image_url: string | null;
+  category: string | null;
+  created_at: string;
 };
-
-const opportunities: Opportunity[] = [
-  {
-    id: 1,
-    title: "Volunteer Teacher",
-    organization: "Education First",
-    organizationId: "2",
-    location: "Remote",
-    commitment: "5 hours/week",
-    category: "Education",
-    description: "Help teach English to underprivileged children through our online program.",
-    requirements: ["Fluent English", "Teaching experience (preferred)", "Reliable internet connection"]
-  },
-  {
-    id: 2,
-    title: "Food Distribution Assistant",
-    organization: "Community Food Bank",
-    organizationId: "3",
-    location: "San Francisco, CA",
-    commitment: "3 hours/week",
-    category: "Food Security",
-    description: "Help package and distribute food to families in need in your local community.",
-    requirements: ["Ability to lift 25 lbs", "Weekend availability"]
-  },
-  {
-    id: 3,
-    title: "Web Developer",
-    organization: "Water For All",
-    organizationId: "1",
-    location: "Remote",
-    commitment: "Project-based",
-    category: "IT & Technology",
-    description: "Help redesign our website to better showcase our clean water initiatives around the world.",
-    requirements: ["HTML/CSS/JavaScript", "Responsive design experience", "WordPress knowledge"]
-  },
-  {
-    id: 4,
-    title: "Event Coordinator",
-    organization: "Animal Rescue Foundation",
-    organizationId: "4",
-    location: "New York, NY",
-    commitment: "10 hours/month",
-    category: "Animal Welfare",
-    description: "Help organize fundraising events and adoption drives for rescued pets.",
-    requirements: ["Event planning experience", "Excellent communication skills", "Social media knowledge"]
-  },
-  {
-    id: 5,
-    title: "Environmental Researcher",
-    organization: "Green Earth Initiative",
-    organizationId: "5", 
-    location: "Portland, OR",
-    commitment: "Part-time",
-    category: "Environment",
-    description: "Collect and analyze data on local environmental conditions to support conservation efforts.",
-    requirements: ["Background in environmental science", "Research experience", "Data analysis skills"]
-  },
-];
 
 const Opportunities = () => {
   const navigate = useNavigate();
   const { isAuthenticated } = useAuth();
-  const [selectedOpportunity, setSelectedOpportunity] = useState<Opportunity | null>(null);
-  const [isRegistrationFormOpen, setIsRegistrationFormOpen] = useState(false);
+  const [campaigns, setCampaigns] = useState<Campaign[]>([]);
+  const [selectedCampaign, setSelectedCampaign] = useState<Campaign | null>(null);
+  const [isApplicationFormOpen, setIsApplicationFormOpen] = useState(false);
+  const [loading, setLoading] = useState(true);
 
-  const handleViewDetails = (opportunity: Opportunity) => {
-    navigate(`/ngo/${opportunity.organizationId}`);
+  useEffect(() => {
+    const fetchCampaigns = async () => {
+      const { data, error } = await supabase
+        .from('campaigns')
+        .select('*')
+        .order('created_at', { ascending: false });
+      
+      if (error) {
+        console.error('Error fetching campaigns:', error);
+      } else if (data) {
+        setCampaigns(data);
+      }
+      setLoading(false);
+    };
+    
+    fetchCampaigns();
+  }, []);
+
+  const handleViewDetails = (campaign: Campaign) => {
+    navigate(`/ngo/${campaign.ngo_id}`);
   };
   
-  const handleApplyNow = (opportunity: Opportunity) => {
+  const handleApplyNow = (campaign: Campaign) => {
     if (!isAuthenticated) {
       navigate('/auth', { state: { returnTo: '/opportunities' } });
       return;
     }
-    setSelectedOpportunity(opportunity);
-    setIsRegistrationFormOpen(true);
+    setSelectedCampaign(campaign);
+    setIsApplicationFormOpen(true);
   };
 
-  const handleCloseRegistrationForm = () => {
-    setIsRegistrationFormOpen(false);
-    setSelectedOpportunity(null);
+  const handleCloseApplicationForm = () => {
+    setIsApplicationFormOpen(false);
+    setSelectedCampaign(null);
   };
+
+  if (loading) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <div className="flex justify-center py-8">
+          <div className="animate-spin h-8 w-8 border-4 border-connect-primary border-t-transparent rounded-full"></div>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="min-h-screen flex flex-col">
-      <main className="flex-1 container mx-auto px-4 py-8">
+    <div className="container mx-auto px-4 py-8">
         <div className="flex justify-between items-center mb-6">
           <div>
-            <h1 className="text-3xl font-bold">Volunteer Opportunities</h1>
+            <h1 className="text-3xl font-bold">Volunteer Campaigns</h1>
             <p className="text-muted-foreground mt-2">
-              Find ways to contribute your skills and time to make a difference
+              Find active campaigns and drives to volunteer for
             </p>
           </div>
         </div>
         
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {opportunities.map((opportunity) => (
-            <Card key={opportunity.id}>
+          {campaigns.map((campaign) => (
+            <Card key={campaign.id}>
               <CardHeader>
                 <div className="flex justify-between items-start">
-                  <CardTitle className="text-xl">{opportunity.title}</CardTitle>
-                  <Badge variant="secondary">{opportunity.category}</Badge>
+                  <CardTitle className="text-xl">{campaign.title}</CardTitle>
+                  {campaign.category && <Badge variant="secondary">{campaign.category}</Badge>}
                 </div>
                 <CardDescription className="flex flex-col gap-1 mt-2">
-                  <span className="font-medium">{opportunity.organization}</span>
-                  <span>{opportunity.location}</span>
-                  <span className="text-xs text-muted-foreground">{opportunity.commitment}</span>
+                  {campaign.location && (
+                    <div className="flex items-center">
+                      <MapPin className="h-4 w-4 mr-1" />
+                      {campaign.location}
+                    </div>
+                  )}
+                  {campaign.date && (
+                    <div className="flex items-center">
+                      <Calendar className="h-4 w-4 mr-1" />
+                      {new Date(campaign.date).toLocaleDateString()}
+                    </div>
+                  )}
                 </CardDescription>
               </CardHeader>
               <CardContent>
                 <p className="text-sm text-muted-foreground mb-4">
-                  {opportunity.description}
+                  {campaign.description || 'Join this volunteer campaign to make a difference!'}
                 </p>
-                <div>
-                  <h4 className="text-sm font-semibold mb-2">Requirements:</h4>
-                  <ul className="list-disc list-inside text-xs text-muted-foreground">
-                    {opportunity.requirements.map((req, index) => (
-                      <li key={index}>{req}</li>
-                    ))}
-                  </ul>
-                </div>
+                {campaign.goal && (
+                  <div>
+                    <h4 className="text-sm font-semibold mb-2">Goal:</h4>
+                    <p className="text-xs text-muted-foreground">{campaign.goal}</p>
+                  </div>
+                )}
               </CardContent>
               <CardFooter className="flex gap-3">
                 <Button 
                   variant="outline" 
                   className="flex-1"
-                  onClick={() => handleViewDetails(opportunity)}
+                  onClick={() => handleViewDetails(campaign)}
                 >
-                  View Details
+                  View NGO
                 </Button>
                 <Button 
                   className="flex-1"
-                  onClick={() => handleApplyNow(opportunity)}
+                  onClick={() => handleApplyNow(campaign)}
                 >
                   Apply Now
                 </Button>
@@ -165,14 +146,13 @@ const Opportunities = () => {
             </Card>
           ))}
         </div>
-      </main>
 
-      {selectedOpportunity && (
-        <VolunteerRegistrationForm
-          ngoId={selectedOpportunity.organizationId.toString()}
-          ngoName={selectedOpportunity.organization}
-          isOpen={isRegistrationFormOpen}
-          onClose={handleCloseRegistrationForm}
+      {selectedCampaign && (
+        <CampaignApplicationForm
+          campaignId={selectedCampaign.id}
+          campaignTitle={selectedCampaign.title}
+          isOpen={isApplicationFormOpen}
+          onClose={handleCloseApplicationForm}
         />
       )}
     </div>

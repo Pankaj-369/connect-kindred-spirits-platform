@@ -101,25 +101,20 @@ const NGODetail = () => {
   
   if (isLoading) {
     return (
-      <div className="min-h-screen flex flex-col">
-        <Navigation />
-        <main className="flex-1 container mx-auto px-4 py-8">
+      <div className="container mx-auto px-4 py-8">
           <div className="flex justify-center items-center h-64">
             <div className="animate-pulse space-y-4">
               <div className="h-12 bg-gray-200 rounded w-72"></div>
               <div className="h-6 bg-gray-200 rounded w-48"></div>
             </div>
           </div>
-        </main>
       </div>
     );
   }
   
   if (!ngo) {
     return (
-      <div className="min-h-screen flex flex-col">
-        <Navigation />
-        <main className="flex-1 container mx-auto px-4 py-8">
+      <div className="container mx-auto px-4 py-8">
           <div className="text-center py-12">
             <Building className="mx-auto h-12 w-12 text-gray-400" />
             <h2 className="mt-4 text-lg font-medium">NGO Not Found</h2>
@@ -134,15 +129,12 @@ const NGODetail = () => {
               Return to NGO Directory
             </Button>
           </div>
-        </main>
       </div>
     );
   }
   
   return (
-    <div className="min-h-screen flex flex-col">
-      <Navigation />
-      <main className="flex-1 container mx-auto px-4 py-8">
+    <div className="container mx-auto px-4 py-8">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           
           {/* Left column - NGO profile */}
@@ -263,7 +255,6 @@ const NGODetail = () => {
             </Card>
           </div>
         </div>
-      </main>
       
       {/* Volunteer Registration Form Dialog */}
       <VolunteerRegistrationForm 

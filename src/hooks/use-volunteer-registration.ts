@@ -122,8 +122,8 @@ export const useVolunteerRegistration = ({
         }
         
         toast({
-          title: "Registration submitted",
-          description: `Your volunteer application for ${ngoName} has been submitted successfully!`,
+          title: "Your application has been sent to the NGO!",
+          description: `Your volunteer application for ${ngoName} has been submitted successfully. The NGO will review your application and get in touch with you.`,
         });
 
         // Send confirmation email (in a real app, this would be handled by a server function)

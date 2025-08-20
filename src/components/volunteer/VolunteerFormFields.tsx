@@ -104,7 +104,12 @@ const VolunteerFormFields = ({ form }: VolunteerFormFieldsProps) => {
             <FormControl>
               <Input 
                 placeholder="e.g., Teaching, Web Design, Medical" 
-                {...field} 
+                {...field}
+                value={field.value ? field.value.join(', ') : ''}
+                onChange={(e) => {
+                  const skills = e.target.value ? e.target.value.split(',').map(s => s.trim()) : [];
+                  field.onChange(skills);
+                }}
               />
             </FormControl>
             <FormMessage />

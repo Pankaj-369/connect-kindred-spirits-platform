@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -35,65 +35,64 @@ import {
 } from '@/components/ui/form';
 
 type Campaign = {
-  id: number;
+  id: string;
+  ngo_id?: string;
   title: string;
-  description: string;
-  goal: string;
-  organizer: string;
-  imageUrl: string;
-  createdAt: Date;
+  description?: string;
+  location?: string;
+  date?: string | Date;
+  goal?: string;
+  image_url?: string;
+  imageUrl?: string;
+  category?: string;
+  organizer?: string;
+  created_at?: string;
+  createdAt?: Date;
 };
-
-const initialCampaigns: Campaign[] = [
-  {
-    id: 1,
-    title: 'Clean Water Initiative',
-    description: 'Help us provide clean water to communities in need.',
-    goal: '$10,000',
-    organizer: 'Water For All NGO',
-    imageUrl: 'https://images.unsplash.com/photo-1544307399-86bef69e7dc8',
-    createdAt: new Date('2023-05-12'),
-  },
-  {
-    id: 2,
-    title: 'Food Bank Expansion',
-    description: 'Support our effort to expand our food bank to serve more families.',
-    goal: '$5,000',
-    organizer: 'Community Food Bank',
-    imageUrl: 'https://images.unsplash.com/photo-1534732806146-b3bf32171b48',
-    createdAt: new Date('2023-06-23'),
-  },
-  {
-    id: 3,
-    title: 'Education for All',
-    description: 'Help us build a school in a rural area.',
-    goal: '$25,000',
-    organizer: 'Education First',
-    imageUrl: 'https://images.unsplash.com/photo-1503676260728-1c00da094a0b',
-    createdAt: new Date('2023-04-18'),
-  },
-];
 
 type FormData = {
   title: string;
   description: string;
+  location: string;
   goal: string;
-  organizer: string;
   imageUrl: string;
 };
 
 const Campaigns = () => {
-  const [campaigns, setCampaigns] = useState<Campaign[]>(initialCampaigns);
+  const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const { toast } = useToast();
   const { user, profile } = useAuth();
+  
+  // Fetch campaigns from database on component mount
+  useEffect(() => {
+    const fetchCampaigns = async () => {
+      const { data, error } = await supabase
+        .from('campaigns')
+        .select('*')
+        .order('created_at', { ascending: false });
+      
+      if (error) {
+        console.error('Error fetching campaigns:', error);
+        toast({
+          title: "Error",
+          description: "Failed to load campaigns",
+          variant: "destructive"
+        });
+      } else if (data) {
+        setCampaigns(data);
+      }
+    };
+    
+    fetchCampaigns();
+  }, [toast]);
   
   const form = useForm<FormData>({
     defaultValues: {
       title: '',
       description: '',
+      location: '',
       goal: '',
-      organizer: profile?.ngo_name || '',
       imageUrl: '',
     }
   });
@@ -101,60 +100,48 @@ const Campaigns = () => {
   const onSubmit = async (data: FormData) => {
     if (!user) return;
 
-    const newCampaign: Campaign = {
-      id: campaigns.length + 1,
-      ...data,
-      createdAt: new Date(),
-    };
-    
-    // Add campaign to the local state
-    setCampaigns([...campaigns, newCampaign]);
-    
     try {
-      // For demo purposes, we'll simulate storing in Supabase
-      // In a real app, you'd add this to an actual "campaigns" table
+      // Insert campaign into database
+      const { data: newCampaign, error } = await supabase
+        .from('campaigns')
+        .insert({
+          ngo_id: user.id,
+          title: data.title,
+          description: data.description,
+          location: data.location,
+          goal: data.goal,
+          image_url: data.imageUrl,
+          category: 'Community', // Default category
+        })
+        .select()
+        .single();
       
-      // Notify all volunteers about the new campaign
-      const { data: volunteers, error: volunteersError } = await supabase
-        .from('profiles')
-        .select('id')
-        .eq('is_ngo', false);
-      
-      if (volunteersError) {
-        console.error("Error fetching volunteers:", volunteersError);
-        throw volunteersError;
+      if (error) {
+        throw error;
       }
-
-      // Note: We're not creating notifications since the 'notifications' table 
-      // doesn't exist yet in the database schema
       
-      // Send an email to all volunteers (This would be implemented with an Edge Function in a real app)
-      // For now, we'll show a toast message simulating email sent
+      // Update local state
+      setCampaigns(prev => [newCampaign, ...prev]);
+      
       toast({
-        title: "Notifications sent",
-        description: `${volunteers?.length || 0} volunteers have been notified about your new campaign.`,
+        title: "Campaign created!",
+        description: "Your campaign has been successfully created and is now visible to volunteers.",
       });
+      
+      form.reset();
+      setIsDialogOpen(false);
     } catch (error: any) {
-      console.error("Error:", error);
+      console.error("Error creating campaign:", error);
       toast({
         title: "Error",
-        description: "There was an error creating notifications.",
+        description: "Failed to create campaign. Please try again.",
         variant: "destructive"
       });
     }
-    
-    toast({
-      title: "Campaign created!",
-      description: "Your campaign has been successfully created.",
-    });
-    
-    form.reset();
-    setIsDialogOpen(false);
   };
 
   return (
-    <div className="min-h-screen">
-      <main className="flex-1 container mx-auto px-4 py-8">
+    <div className="container mx-auto px-4 py-8">
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-3xl font-bold">Campaigns</h1>
           
@@ -169,7 +156,7 @@ const Campaigns = () => {
               <DialogHeader>
                 <DialogTitle>Create a New Campaign</DialogTitle>
                 <DialogDescription>
-                  Fill out the form below to create a new fundraising campaign.
+                  Fill out the form below to create a new volunteer campaign/drive.
                 </DialogDescription>
               </DialogHeader>
               
@@ -182,7 +169,7 @@ const Campaigns = () => {
                       <FormItem>
                         <FormLabel>Campaign Title</FormLabel>
                         <FormControl>
-                          <Input placeholder="Enter campaign title" {...field} />
+                          <Input placeholder="e.g., Beach Cleanup Drive" {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -197,7 +184,7 @@ const Campaigns = () => {
                         <FormLabel>Description</FormLabel>
                         <FormControl>
                           <Textarea 
-                            placeholder="Describe your campaign" 
+                            placeholder="Describe your campaign activities and goals" 
                             className="resize-none" 
                             {...field} 
                           />
@@ -210,12 +197,12 @@ const Campaigns = () => {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <FormField
                       control={form.control}
-                      name="goal"
+                      name="location"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Fundraising Goal</FormLabel>
+                          <FormLabel>Location</FormLabel>
                           <FormControl>
-                            <Input placeholder="e.g. $5,000" {...field} />
+                            <Input placeholder="e.g., Miami Beach, FL" {...field} />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -224,12 +211,12 @@ const Campaigns = () => {
                     
                     <FormField
                       control={form.control}
-                      name="organizer"
+                      name="goal"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Organizer</FormLabel>
+                          <FormLabel>Goal</FormLabel>
                           <FormControl>
-                            <Input placeholder="Organization name" {...field} />
+                            <Input placeholder="e.g., 50 volunteers" {...field} />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -268,7 +255,7 @@ const Campaigns = () => {
             <Card key={campaign.id} className="overflow-hidden">
               <div className="h-48 overflow-hidden">
                 <img 
-                  src={campaign.imageUrl} 
+                  src={campaign.image_url || campaign.imageUrl || "/placeholder.svg"} 
                   alt={campaign.title}
                   className="w-full h-full object-cover"
                   onError={(e) => {
@@ -279,7 +266,8 @@ const Campaigns = () => {
               <CardHeader>
                 <CardTitle>{campaign.title}</CardTitle>
                 <CardDescription>
-                  Organized by {campaign.organizer}
+                  {campaign.location && `${campaign.location} • `}
+                  {campaign.date && new Date(campaign.date).toLocaleDateString()}
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -292,12 +280,11 @@ const Campaigns = () => {
               </CardContent>
               <CardFooter className="flex justify-between">
                 <Button variant="outline">View Details</Button>
-                <Button>Donate</Button>
+                <Button>Apply Now</Button>
               </CardFooter>
             </Card>
           ))}
         </div>
-      </main>
     </div>
   );
 };
