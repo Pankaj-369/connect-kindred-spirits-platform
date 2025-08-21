@@ -283,10 +283,7 @@ const Dashboard = () => {
                   </div>
                 ) : (
                   // NGO view - active volunteers
-                  <div>
-                    <h3 className="text-lg font-semibold mb-4">Active Volunteers</h3>
-                    <ActiveVolunteers />
-                  </div>
+                  <ActiveVolunteers />
                 )}
               </TabsContent>
             </Tabs>
