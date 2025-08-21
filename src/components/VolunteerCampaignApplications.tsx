@@ -56,13 +56,14 @@ const VolunteerCampaignApplications = () => {
           .from('campaign_applications')
           .select(`
             *,
-            campaigns!inner(*)
+            campaigns(*)
           `)
           .eq('volunteer_id', user.id);
 
         if (error) {
           console.error('Error fetching applications:', error);
         } else if (applicationsData) {
+          console.log('Fetched applications data:', applicationsData);
           // Transform the data to include campaign info
           const transformedData = applicationsData.map((app: any) => ({
             ...app,

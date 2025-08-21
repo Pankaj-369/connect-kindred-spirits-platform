@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import CampaignApplicationsManagement from '@/components/CampaignApplicationsManagement';
+import ActiveVolunteers from '@/components/ActiveVolunteers';
 
 const VolunteerManagement = () => {
   const [activeTab, setActiveTab] = useState('applications');
@@ -30,21 +31,7 @@ const VolunteerManagement = () => {
             Manage your active volunteers and their assignments.
           </p>
           
-          <Card>
-            <CardHeader>
-              <CardTitle>Active Volunteers</CardTitle>
-              <CardDescription>
-                Volunteers currently working with your organization
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="text-center py-12">
-                <p className="text-gray-500">
-                  No active volunteers yet. Approve volunteer applications to see them here.
-                </p>
-              </div>
-            </CardContent>
-          </Card>
+          <ActiveVolunteers />
         </TabsContent>
       </Tabs>
     </div>

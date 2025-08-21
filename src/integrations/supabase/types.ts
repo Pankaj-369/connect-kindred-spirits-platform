@@ -63,7 +63,22 @@ export type Database = {
           updated_at?: string
           volunteer_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "campaign_applications_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "campaigns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "campaign_applications_volunteer_id_fkey"
+            columns: ["volunteer_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       campaigns: {
         Row: {
