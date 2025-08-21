@@ -9,6 +9,8 @@ import { Calendar, MapPin, Heart, Star, BookmarkPlus } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import NotificationCenter from '@/components/NotificationCenter';
 import VolunteerCampaignApplications from '@/components/VolunteerCampaignApplications';
+import CampaignApplicationsManagement from '@/components/CampaignApplicationsManagement';
+import ActiveVolunteers from '@/components/ActiveVolunteers';
 
 const Dashboard = () => {
   const { isAuthenticated, profile } = useAuth();
@@ -236,18 +238,12 @@ const Dashboard = () => {
                 ) : (
                   // NGO view - applications 
                   <div className="space-y-6">
-                    <CardContent className="p-0">
-                      <p className="mb-4 text-sm text-muted-foreground">
+                    <div className="mb-4">
+                      <p className="text-sm text-muted-foreground mb-4">
                         Review and manage volunteer applications for your opportunities.
                       </p>
-                      <button
-                        onClick={() => navigate('/volunteer-management')}
-                        className="w-full text-left px-4 py-3 bg-gray-50 hover:bg-gray-100 rounded-md flex justify-between items-center"
-                      >
-                        <span className="font-medium">Go to Volunteer Management</span>
-                        <span className="text-connect-primary">→</span>
-                      </button>
-                    </CardContent>
+                      <CampaignApplicationsManagement />
+                    </div>
                   </div>
                 )}
               </TabsContent>
@@ -289,12 +285,7 @@ const Dashboard = () => {
                   // NGO view - active volunteers
                   <div>
                     <h3 className="text-lg font-semibold mb-4">Active Volunteers</h3>
-                    <div className="text-center py-8 text-muted-foreground">
-                      <p>No active volunteers yet.</p>
-                      <p className="text-sm mt-1">
-                        Approve volunteer applications to see them here.
-                      </p>
-                    </div>
+                    <ActiveVolunteers />
                   </div>
                 )}
               </TabsContent>
