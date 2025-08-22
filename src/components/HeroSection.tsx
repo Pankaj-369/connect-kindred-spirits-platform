@@ -1,8 +1,11 @@
 
 import { Button } from './ui/button';
 import { ArrowRight } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 const HeroSection = () => {
+  const navigate = useNavigate();
+  
   return (
     <section className="relative overflow-hidden">
       <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1559027615-cd4628902d4a?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80')] bg-cover bg-center opacity-20"></div>
@@ -22,11 +25,20 @@ const HeroSection = () => {
           </p>
           
           <div className="flex flex-col sm:flex-row gap-4 justify-center animate-fade-in" style={{ animationDelay: '0.5s' }}>
-            <Button size="lg" className="bg-connect-primary hover:bg-connect-primary/90 text-lg px-8 py-6">
+            <Button 
+              size="lg" 
+              className="bg-connect-primary hover:bg-connect-primary/90 text-lg px-8 py-6"
+              onClick={() => navigate('/opportunities')}
+            >
               Find Opportunities
               <ArrowRight className="ml-2 h-5 w-5" />
             </Button>
-            <Button size="lg" variant="outline" className="border-connect-secondary text-connect-secondary hover:bg-connect-secondary/10 text-lg px-8 py-6">
+            <Button 
+              size="lg" 
+              variant="outline" 
+              className="border-connect-secondary text-connect-secondary hover:bg-connect-secondary/10 text-lg px-8 py-6"
+              onClick={() => navigate('/auth')}
+            >
               For NGOs
             </Button>
           </div>

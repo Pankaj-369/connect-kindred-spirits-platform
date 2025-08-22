@@ -143,7 +143,6 @@ const Dashboard = () => {
     <div className="container mx-auto px-4 py-8">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-3xl font-bold">Dashboard</h1>
-        <NotificationCenter />
       </div>
       
       <div className="grid grid-cols-1 gap-6 md:grid-cols-3">

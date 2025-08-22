@@ -1,8 +1,11 @@
 
 import { ArrowRight } from 'lucide-react';
 import { Button } from './ui/button';
+import { useNavigate } from 'react-router-dom';
 
 const CTASection = () => {
+  const navigate = useNavigate();
+  
   return (
     <section className="py-16">
       <div className="container mx-auto px-4">
@@ -17,11 +20,20 @@ const CTASection = () => {
             </p>
             
             <div className="flex flex-col sm:flex-row justify-center gap-4">
-              <Button size="lg" className="bg-white text-connect-primary hover:bg-white/90 text-lg px-8">
+              <Button 
+                size="lg" 
+                className="bg-white text-connect-primary hover:bg-white/90 text-lg px-8"
+                onClick={() => navigate('/opportunities')}
+              >
                 Find Opportunities
                 <ArrowRight className="ml-2 h-5 w-5" />
               </Button>
-              <Button size="lg" variant="outline" className="border-white text-white hover:bg-white/20 text-lg px-8">
+              <Button 
+                size="lg" 
+                variant="outline" 
+                className="border-white text-white hover:bg-white/20 text-lg px-8"
+                onClick={() => navigate('/auth')}
+              >
                 For NGOs
               </Button>
             </div>
