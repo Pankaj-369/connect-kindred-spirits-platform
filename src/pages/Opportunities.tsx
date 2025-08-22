@@ -55,8 +55,21 @@ const Opportunities = () => {
     fetchCampaigns();
   }, []);
 
-  const handleViewDetails = (campaign: Campaign) => {
-    navigate(`/ngo/${campaign.ngo_id}`);
+  const handleViewDetails = async (campaign: Campaign) => {
+    // Check if NGO profile exists before navigating
+    const { data: ngoProfile } = await supabase
+      .from('profiles')
+      .select('id, is_ngo, ngo_name, full_name')
+      .eq('id', campaign.ngo_id)
+      .eq('is_ngo', true)
+      .single();
+      
+    if (ngoProfile) {
+      navigate(`/ngo/${campaign.ngo_id}`);
+    } else {
+      // Fallback: show campaign details in a modal or redirect to campaigns page
+      navigate('/campaigns');
+    }
   };
   
   const handleApplyNow = (campaign: Campaign) => {
