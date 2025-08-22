@@ -1,20 +1,26 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Navigate, useNavigate } from 'react-router-dom';
 import RecommendedOpportunities from '@/components/RecommendedOpportunities';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useAuth } from '@/contexts/AuthContext';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Calendar, MapPin, Heart, Star, BookmarkPlus } from 'lucide-react';
+import { Calendar, MapPin, Heart, Star, BookmarkPlus, Users, TrendingUp, Activity } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import NotificationCenter from '@/components/NotificationCenter';
 import VolunteerCampaignApplications from '@/components/VolunteerCampaignApplications';
-import CampaignApplicationsManagement from '@/components/CampaignApplicationsManagement';
-import ActiveVolunteers from '@/components/ActiveVolunteers';
+import { supabase } from '@/integrations/supabase/client';
 
 const Dashboard = () => {
-  const { isAuthenticated, profile } = useAuth();
-  const [activeTab, setActiveTab] = useState('recommendations');
+  const { isAuthenticated, profile, user } = useAuth();
+  const [activeTab, setActiveTab] = useState('overview');
+  const [stats, setStats] = useState({
+    totalApplications: 0,
+    activeVolunteers: 0,
+    activeCampaigns: 0,
+    recentApplications: [] as any[]
+  });
+  const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
   if (!isAuthenticated) {
@@ -74,6 +80,64 @@ const Dashboard = () => {
 
   // Determine if user is volunteer or NGO
   const isNGO = profile?.is_ngo === true;
+
+  // Fetch NGO stats
+  useEffect(() => {
+    if (!user || !isNGO) {
+      setLoading(false);
+      return;
+    }
+
+    const fetchNGOStats = async () => {
+      try {
+        // Get total applications from both sources
+        const [volunteerApps, campaignApps, campaigns] = await Promise.all([
+          supabase
+            .from('volunteer_registrations')
+            .select('*', { count: 'exact' })
+            .eq('ngo_id', user.id),
+          supabase
+            .from('campaign_applications')
+            .select(`
+              *,
+              campaigns!inner(ngo_id)
+            `, { count: 'exact' })
+            .eq('campaigns.ngo_id', user.id),
+          supabase
+            .from('campaigns')
+            .select('*', { count: 'exact' })
+            .eq('ngo_id', user.id)
+        ]);
+
+        // Get recent applications for activity feed
+        const { data: recentApps } = await supabase
+          .from('campaign_applications')
+          .select(`
+            *,
+            campaigns!inner(title, ngo_id)
+          `)
+          .eq('campaigns.ngo_id', user.id)
+          .order('created_at', { ascending: false })
+          .limit(5);
+
+        const totalApps = (volunteerApps.count || 0) + (campaignApps.count || 0);
+        const activeVols = (campaignApps.data?.filter(app => app.status === 'approved').length || 0);
+
+        setStats({
+          totalApplications: totalApps,
+          activeVolunteers: activeVols,
+          activeCampaigns: campaigns.count || 0,
+          recentApplications: recentApps || []
+        });
+      } catch (error) {
+        console.error('Error fetching NGO stats:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchNGOStats();
+  }, [user, isNGO]);
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -152,27 +216,58 @@ const Dashboard = () => {
             </div>
           )}
           
-          {/* Quick actions for NGOs */}
+          {/* NGO Stats Overview */}
           {isNGO && (
             <Card className="mt-6">
               <CardHeader>
-                <CardTitle>Quick Actions</CardTitle>
+                <CardTitle className="flex items-center">
+                  <TrendingUp className="h-5 w-5 mr-2 text-connect-primary" />
+                  Overview
+                </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-2">
-                <button
-                  onClick={() => navigate('/volunteer-management')}
-                  className="w-full text-left px-4 py-3 bg-gray-50 hover:bg-gray-100 rounded-md flex justify-between items-center"
-                >
-                  <span className="font-medium">Manage Volunteers</span>
-                  <span className="text-connect-primary">→</span>
-                </button>
-                <button
-                  onClick={() => navigate('/campaigns')}
-                  className="w-full text-left px-4 py-3 bg-gray-50 hover:bg-gray-100 rounded-md flex justify-between items-center"
-                >
-                  <span className="font-medium">Manage Campaigns</span>
-                  <span className="text-connect-primary">→</span>
-                </button>
+              <CardContent className="space-y-4">
+                {loading ? (
+                  <div className="animate-pulse space-y-3">
+                    <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+                    <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+                    <div className="h-4 bg-gray-200 rounded w-2/3"></div>
+                  </div>
+                ) : (
+                  <>
+                    <div className="grid grid-cols-1 gap-3">
+                      <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                        <div className="flex items-center">
+                          <Users className="h-4 w-4 text-connect-primary mr-2" />
+                          <span className="text-sm font-medium">Total Applications</span>
+                        </div>
+                        <span className="text-lg font-bold text-connect-primary">{stats.totalApplications}</span>
+                      </div>
+                      <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                        <div className="flex items-center">
+                          <Star className="h-4 w-4 text-connect-primary mr-2" />
+                          <span className="text-sm font-medium">Active Volunteers</span>
+                        </div>
+                        <span className="text-lg font-bold text-connect-primary">{stats.activeVolunteers}</span>
+                      </div>
+                      <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                        <div className="flex items-center">
+                          <Activity className="h-4 w-4 text-connect-primary mr-2" />
+                          <span className="text-sm font-medium">Active Campaigns</span>
+                        </div>
+                        <span className="text-lg font-bold text-connect-primary">{stats.activeCampaigns}</span>
+                      </div>
+                    </div>
+                    <div className="pt-2">
+                      <button
+                        onClick={() => navigate('/volunteer-management')}
+                        className="w-full text-left px-4 py-3 bg-connect-primary text-white hover:bg-connect-primary/90 rounded-md flex justify-between items-center transition-colors"
+                      >
+                        <span className="font-medium">Manage Volunteers</span>
+                        <span>→</span>
+                      </button>
+                    </div>
+                  </>
+                )}
               </CardContent>
             </Card>
           )}
@@ -184,16 +279,16 @@ const Dashboard = () => {
             <Tabs defaultValue={activeTab} value={activeTab} onValueChange={setActiveTab} className="h-full flex flex-col">
               <div className="px-6 pt-6">
                 <TabsList className="grid w-full grid-cols-2">
-                  <TabsTrigger value="recommendations">
-                    {isNGO ? "Volunteer Applications" : "Your Activities"}
+                  <TabsTrigger value="overview">
+                    {isNGO ? "Recent Activity" : "Your Activities"}
                   </TabsTrigger>
                   <TabsTrigger value="saved">
-                    {isNGO ? "Active Volunteers" : "Saved Opportunities"}
+                    {isNGO ? "Quick Actions" : "Saved Opportunities"}
                   </TabsTrigger>
                 </TabsList>
               </div>
               
-              <TabsContent value="recommendations" className="flex-1 p-6">
+              <TabsContent value="overview" className="flex-1 p-6">
                 {!isNGO ? (
                   // Volunteer view - activities
                   <div className="space-y-6">
@@ -236,13 +331,52 @@ const Dashboard = () => {
                     </div>
                   </div>
                 ) : (
-                  // NGO view - applications 
+                  // NGO view - recent activity feed
                   <div className="space-y-6">
-                    <div className="mb-4">
-                      <p className="text-sm text-muted-foreground mb-4">
-                        Review and manage volunteer applications for your opportunities.
-                      </p>
-                      <CampaignApplicationsManagement />
+                    <div>
+                      <h3 className="text-lg font-semibold mb-4 flex items-center">
+                        <Activity className="h-5 w-5 mr-2 text-connect-primary" />
+                        Recent Activity
+                      </h3>
+                      
+                      {loading ? (
+                        <div className="space-y-3">
+                          {[1, 2, 3].map(i => (
+                            <div key={i} className="animate-pulse flex items-center p-3 border rounded">
+                              <div className="h-10 w-10 bg-gray-200 rounded-full mr-3"></div>
+                              <div className="flex-1">
+                                <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
+                                <div className="h-3 bg-gray-200 rounded w-1/2"></div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      ) : stats.recentApplications.length > 0 ? (
+                        <div className="space-y-3">
+                          {stats.recentApplications.map(app => (
+                            <div key={app.id} className="flex items-center p-3 border rounded hover:bg-gray-50 transition-colors">
+                              <div className="bg-blue-100 rounded-full h-10 w-10 flex items-center justify-center mr-3">
+                                <Users className="h-5 w-5 text-blue-600" />
+                              </div>
+                              <div className="flex-1">
+                                <h4 className="font-medium text-sm">{app.name} applied for "{app.campaigns?.title}"</h4>
+                                <div className="flex items-center text-xs text-muted-foreground mt-1">
+                                  <span className="mr-3">{new Date(app.created_at).toLocaleDateString()}</span>
+                                  <Badge variant={app.status === 'approved' ? 'default' : app.status === 'rejected' ? 'destructive' : 'secondary'} className="text-xs">
+                                    {app.status}
+                                  </Badge>
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <div className="text-center py-8 text-muted-foreground">
+                          <Activity className="h-12 w-12 mx-auto mb-3 opacity-20" />
+                          <p>No recent activity</p>
+                          <p className="text-sm mt-1">Applications will appear here as volunteers apply</p>
+                        </div>
+                      )}
                     </div>
                   </div>
                 )}
@@ -282,8 +416,30 @@ const Dashboard = () => {
                     )}
                   </div>
                 ) : (
-                  // NGO view - active volunteers
-                  <ActiveVolunteers />
+                  // NGO view - quick actions
+                  <div className="space-y-6">
+                    <div>
+                      <h3 className="text-lg font-semibold mb-4">Quick Actions</h3>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <button
+                          onClick={() => navigate('/campaigns')}
+                          className="p-6 border-2 border-dashed border-gray-300 hover:border-connect-primary hover:bg-connect-primary/5 rounded-lg text-center transition-colors group"
+                        >
+                          <Activity className="h-8 w-8 mx-auto mb-3 text-gray-400 group-hover:text-connect-primary transition-colors" />
+                          <h4 className="font-semibold text-gray-900 group-hover:text-connect-primary transition-colors">Create Campaign</h4>
+                          <p className="text-sm text-gray-500 mt-1">Start a new volunteer campaign</p>
+                        </button>
+                        <button
+                          onClick={() => navigate('/volunteer-management')}
+                          className="p-6 border-2 border-dashed border-gray-300 hover:border-connect-primary hover:bg-connect-primary/5 rounded-lg text-center transition-colors group"
+                        >
+                          <Users className="h-8 w-8 mx-auto mb-3 text-gray-400 group-hover:text-connect-primary transition-colors" />
+                          <h4 className="font-semibold text-gray-900 group-hover:text-connect-primary transition-colors">Manage Volunteers</h4>
+                          <p className="text-sm text-gray-500 mt-1">Review applications and manage volunteers</p>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
                 )}
               </TabsContent>
             </Tabs>
