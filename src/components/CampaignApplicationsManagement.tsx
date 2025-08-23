@@ -119,6 +119,12 @@ const CampaignApplicationsManagement = () => {
   }, [user]);
 
   const updateApplicationStatus = async (applicationId: string, status: 'approved' | 'rejected' | 'pending') => {
+    const application = applications.find(app => app.id === applicationId);
+    if (!application) {
+      toast.error('Application not found');
+      return;
+    }
+
     const { error } = await supabase
       .from('campaign_applications')
       .update({ 
@@ -131,6 +137,27 @@ const CampaignApplicationsManagement = () => {
       console.error('Error updating application:', error);
       toast.error('Failed to update application status');
       return;
+    }
+
+    // Send email notification to volunteer if approved or rejected
+    if (status === 'approved' || status === 'rejected') {
+      try {
+        const campaign = campaigns[application.campaign_id];
+        await supabase.functions.invoke('send-notification', {
+          body: {
+            type: status === 'approved' ? 'application_accepted' : 'application_rejected',
+            recipientEmail: application.email,
+            data: {
+              volunteerName: application.name,
+              ngoName: campaign?.title || 'the organization',
+              campaignName: campaign?.title
+            }
+          }
+        });
+      } catch (error) {
+        console.error('Error sending notification email:', error);
+        // Don't show error to user as the main action succeeded
+      }
     }
     
     // Update local state

@@ -7,8 +7,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { Check } from "lucide-react";
+import { Check, Mail, Lock } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
+import OTPLogin from "@/components/OTPLogin";
 
 const interestOptions = [
   "Environment", "Education", "Healthcare", "Animal Welfare", 
@@ -20,6 +21,7 @@ const Auth = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [activeTab, setActiveTab] = useState("login");
+  const [loginMode, setLoginMode] = useState<'password' | 'otp'>('password');
   const [fullName, setFullName] = useState("");
   const [selectedInterests, setSelectedInterests] = useState<string[]>([]);
   const [location, setLocation] = useState("");
@@ -102,43 +104,66 @@ const Auth = () => {
             </TabsList>
             
             <TabsContent value="login">
-              <form onSubmit={handleLogin}>
-                <CardHeader>
-                  <CardTitle>Login to Connect4Good</CardTitle>
-                  <CardDescription>
-                    Enter your credentials to access your account
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="email">Email</Label>
-                    <Input
-                      id="email"
-                      type="email"
-                      placeholder="email@example.com"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      required
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="password">Password</Label>
-                    <Input
-                      id="password"
-                      type="password"
-                      placeholder="Enter your password"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      required
-                    />
-                  </div>
-                </CardContent>
-                <CardFooter>
-                  <Button type="submit" className="w-full" disabled={isLoading}>
-                    {isLoading ? "Logging in..." : "Login"}
+              <CardHeader>
+                <CardTitle>Login to Connect4Good</CardTitle>
+                <CardDescription>
+                  Choose your preferred login method
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex space-x-2 mb-4">
+                  <Button 
+                    type="button"
+                    variant={loginMode === 'password' ? "default" : "outline"}
+                    onClick={() => setLoginMode('password')}
+                    className="flex-1"
+                  >
+                    <Lock className="mr-2 h-4 w-4" />
+                    Password
                   </Button>
-                </CardFooter>
-              </form>
+                  <Button 
+                    type="button"
+                    variant={loginMode === 'otp' ? "default" : "outline"}
+                    onClick={() => setLoginMode('otp')}
+                    className="flex-1"
+                  >
+                    <Mail className="mr-2 h-4 w-4" />
+                    OTP
+                  </Button>
+                </div>
+
+                {loginMode === 'password' ? (
+                  <form onSubmit={handleLogin} className="space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="email">Email</Label>
+                      <Input
+                        id="email"
+                        type="email"
+                        placeholder="email@example.com"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        required
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="password">Password</Label>
+                      <Input
+                        id="password"
+                        type="password"
+                        placeholder="Enter your password"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        required
+                      />
+                    </div>
+                    <Button type="submit" className="w-full" disabled={isLoading}>
+                      {isLoading ? "Logging in..." : "Login"}
+                    </Button>
+                  </form>
+                ) : (
+                  <OTPLogin onSuccess={() => navigate("/dashboard")} />
+                )}
+              </CardContent>
             </TabsContent>
             
             <TabsContent value="register">

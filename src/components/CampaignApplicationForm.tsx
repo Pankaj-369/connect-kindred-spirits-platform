@@ -139,6 +139,41 @@ const CampaignApplicationForm = ({
         throw error;
       }
 
+      // Send email notification to NGO about new campaign application
+      try {
+        const { data: campaign } = await supabase
+          .from('campaigns')
+          .select('ngo_id, title')
+          .eq('id', campaignId)
+          .single();
+
+        if (campaign) {
+          const { data: ngoProfile } = await supabase
+            .from('profiles')
+            .select('ngo_name')
+            .eq('id', campaign.ngo_id)
+            .eq('is_ngo', true)
+            .single();
+
+          if (ngoProfile) {
+            await supabase.functions.invoke('send-notification', {
+              body: {
+                type: 'new_campaign_application',
+                recipientEmail: user.email, // In real app, this should be NGO's email
+                data: {
+                  volunteerName: values.name,
+                  ngoName: ngoProfile.ngo_name,
+                  campaignName: campaign.title
+                }
+              }
+            });
+          }
+        }
+      } catch (error) {
+        console.error('Error sending NGO notification:', error);
+        // Don't throw as main operation succeeded
+      }
+
       toast({
         title: "Your application has been sent to the NGO!",
         description: `Your application for "${campaignTitle}" has been submitted successfully. The NGO will review your application and get in touch with you.`,

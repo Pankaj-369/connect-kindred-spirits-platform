@@ -120,15 +120,37 @@ export const useVolunteerRegistration = ({
           console.error("Registration error:", error);
           throw error;
         }
+
+        // Send email notification to NGO about new application
+        try {
+          const { data: ngoProfile } = await supabase
+            .from('profiles')
+            .select('ngo_name')
+            .eq('id', ngoId)
+            .eq('is_ngo', true)
+            .single();
+
+          if (ngoProfile) {
+            await supabase.functions.invoke('send-notification', {
+              body: {
+                type: 'new_volunteer_application',
+                recipientEmail: user.email, // This should be NGO's email - you might need to get this from NGO profile
+                data: {
+                  volunteerName: volunteerValues.name,
+                  ngoName: ngoProfile.ngo_name
+                }
+              }
+            });
+          }
+        } catch (error) {
+          console.error('Error sending NGO notification:', error);
+          // Don't throw as main operation succeeded
+        }
         
         toast({
           title: "Your application has been sent to the NGO!",
           description: `Your volunteer application for ${ngoName} has been submitted successfully. The NGO will review your application and get in touch with you.`,
         });
-
-        // Send confirmation email (in a real app, this would be handled by a server function)
-        // This is a mock version
-        console.log(`Email would be sent to ${volunteerValues.email} confirming application to ${ngoName}`);
       } 
       else if (registrationType === "volunteer") {
         // General volunteer registration (profile update)
