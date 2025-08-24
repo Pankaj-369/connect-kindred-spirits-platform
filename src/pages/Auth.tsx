@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Check, Mail, Lock } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
-import OTPLogin from "@/components/OTPLogin";
+import { SimpleOTPLogin } from "@/components/SimpleOTPLogin";
 
 const interestOptions = [
   "Environment", "Education", "Healthcare", "Animal Welfare", 
@@ -161,7 +161,7 @@ const Auth = () => {
                     </Button>
                   </form>
                 ) : (
-                  <OTPLogin onSuccess={() => navigate("/dashboard")} />
+                  <SimpleOTPLogin onSuccess={() => navigate("/dashboard")} />
                 )}
               </CardContent>
             </TabsContent>
