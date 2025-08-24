@@ -1,3 +1,4 @@
+// supabase/functions/verify-otp/index.ts
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
@@ -35,11 +36,12 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
-    // Initialize Supabase client
+    // --- Initialize Supabase clients ---
     const supabaseUrl = Deno.env.get("SUPABASE_URL");
-    const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+    const anonKey = Deno.env.get("SUPABASE_ANON_KEY");
+    const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
 
-    if (!supabaseUrl || !supabaseKey) {
+    if (!supabaseUrl || !anonKey || !serviceRoleKey) {
       return new Response(
         JSON.stringify({ error: "Server configuration error" }),
         {
@@ -49,10 +51,14 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
-    const supabase = createClient(supabaseUrl, supabaseKey);
+    // Admin client (service role) → for user management
+    const supabaseAdmin = createClient(supabaseUrl, serviceRoleKey);
 
-    // Find valid OTP
-    const { data: otpData, error: otpError } = await supabase
+    // Normal client (anon) → for OTP verification
+    const supabaseAnon = createClient(supabaseUrl, anonKey);
+
+    // --- Step 1: Verify OTP from your otp_codes table ---
+    const { data: otpData, error: otpError } = await supabaseAdmin
       .from("otp_codes")
       .select("*")
       .eq("email", email)
@@ -83,35 +89,47 @@ const handler = async (req: Request): Promise<Response> => {
     }
 
     // Mark OTP as used
-    await supabase.from("otp_codes").update({ used: true }).eq("id", otpData.id);
+    await supabaseAdmin.from("otp_codes").update({ used: true }).eq("id", otpData.id);
 
-    console.log("OTP verified successfully, logging in user...");
+    console.log("OTP verified successfully, checking user...");
 
-    // Check if user exists
-    const { data: existingUser } = await supabase.auth.admin.getUserByEmail(
-      email,
-    );
+    // --- Step 2: Check if user exists ---
+    const { data: userData, error: userError } =
+      await supabaseAdmin.auth.admin.getUserByEmail(email);
+
+    if (userError) {
+      console.error("Error fetching user:", userError);
+      return new Response(
+        JSON.stringify({ error: "Failed to fetch user" }),
+        {
+          status: 500,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        },
+      );
+    }
 
     let sessionData;
 
-    if (existingUser.user) {
-      // Sign in the existing user with a generated session
-      const { data, error } = await supabase.auth.admin.generateLink({
+    if (userData?.user) {
+      // --- Existing user → generate login link/session ---
+      const { data, error } = await supabaseAdmin.auth.admin.generateLink({
         type: "magiclink",
         email: email,
       });
 
       if (error) {
         console.error("Error generating magic link:", error);
+      } else {
+        sessionData = data;
       }
-      sessionData = data;
     } else {
-      // Create a new user and session
-      const { data, error: signUpError } = await supabase.auth.admin.createUser({
-        email: email,
-        password: email + Date.now().toString(),
-        email_confirm: true,
-      });
+      // --- New user → create & generate login link ---
+      const { data: newUser, error: signUpError } =
+        await supabaseAdmin.auth.admin.createUser({
+          email: email,
+          password: email + Date.now().toString(),
+          email_confirm: true,
+        });
 
       if (signUpError) {
         console.error("Error creating user:", signUpError);
@@ -124,10 +142,10 @@ const handler = async (req: Request): Promise<Response> => {
         );
       }
 
-      console.log("User created successfully");
+      console.log("User created successfully:", newUser);
 
       const { data: linkData, error: magicLinkError } =
-        await supabase.auth.admin.generateLink({
+        await supabaseAdmin.auth.admin.generateLink({
           type: "magiclink",
           email: email,
         });
@@ -137,8 +155,8 @@ const handler = async (req: Request): Promise<Response> => {
       }
     }
 
-    // Cleanup expired OTPs
-    await supabase.from("otp_codes").delete().lt(
+    // --- Step 3: Cleanup expired OTPs ---
+    await supabaseAdmin.from("otp_codes").delete().lt(
       "expires_at",
       new Date().toISOString(),
     );
