@@ -1,6 +1,5 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { Resend } from "npm:resend@2.0.0";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -63,7 +62,6 @@ const handler = async (req: Request): Promise<Response> => {
 
     if (deleteError) {
       console.error("Error deleting old OTPs:", deleteError);
-      // Continue anyway, this is not critical
     }
 
     // Store OTP in database
@@ -72,7 +70,7 @@ const handler = async (req: Request): Promise<Response> => {
       .insert({
         email,
         otp_code: otpCode,
-        expires_at: new Date(Date.now() + 5 * 60 * 1000).toISOString(), // 5 minutes
+        expires_at: new Date(Date.now() + 5 * 60 * 1000).toISOString(),
       });
 
     if (insertError) {
@@ -95,37 +93,45 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
-    console.log("Resend API key found, initializing...");
-    const resend = new Resend(resendApiKey);
+    console.log("Resend API key found, sending email...");
 
-    // Send OTP via email
-    const emailResult = await resend.emails.send({
-      from: "Connect4Good <onboarding@resend.dev>",
-      to: [email],
-      subject: "Your OTP for Login",
-      html: `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-          <h2>Your Login OTP</h2>
-          <p>Your OTP code is:</p>
-          <div style="background-color: #f5f5f5; padding: 20px; text-align: center; margin: 20px 0;">
-            <h1 style="color: #333; font-size: 32px; margin: 0; letter-spacing: 5px;">${otpCode}</h1>
+    // Send OTP via email using fetch
+    const emailResponse = await fetch("https://api.resend.com/emails", {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${resendApiKey}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        from: "Connect4Good <onboarding@resend.dev>",
+        to: [email],
+        subject: "Your OTP for Login",
+        html: `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+            <h2>Your Login OTP</h2>
+            <p>Your OTP code is:</p>
+            <div style="background-color: #f5f5f5; padding: 20px; text-align: center; margin: 20px 0;">
+              <h1 style="color: #333; font-size: 32px; margin: 0; letter-spacing: 5px;">${otpCode}</h1>
+            </div>
+            <p>This code will expire in 5 minutes.</p>
+            <p>If you didn't request this code, please ignore this email.</p>
+            <p>Best regards,<br>Connect4Good Team</p>
           </div>
-          <p>This code will expire in 5 minutes.</p>
-          <p>If you didn't request this code, please ignore this email.</p>
-          <p>Best regards,<br>Connect4Good Team</p>
-        </div>
-      `,
+        `,
+      }),
     });
 
-    if (emailResult.error) {
-      console.error("Error sending email:", emailResult.error);
+    if (!emailResponse.ok) {
+      const errorText = await emailResponse.text();
+      console.error("Resend API error:", errorText);
       return new Response(
-        JSON.stringify({ error: "Failed to send OTP email", details: emailResult.error }),
+        JSON.stringify({ error: "Failed to send OTP email", details: errorText }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    console.log("Email sent successfully:", emailResult.data);
+    const emailResult = await emailResponse.json();
+    console.log("Email sent successfully:", emailResult);
 
     return new Response(
       JSON.stringify({ message: "OTP sent successfully" }),
