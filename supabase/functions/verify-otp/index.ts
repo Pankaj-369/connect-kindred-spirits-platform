@@ -33,7 +33,7 @@ serve(async (req: Request): Promise<Response> => {
       );
     }
 
-    // --- Initialize Supabase clients ---
+    // --- Initialize Supabase client ---
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
@@ -46,7 +46,7 @@ serve(async (req: Request): Promise<Response> => {
 
     const supabaseAdmin = createClient(supabaseUrl, serviceRoleKey);
 
-    // --- Step 1: Verify OTP ---
+    // --- Step 1: Verify OTP from DB ---
     const { data: otpData, error: otpError } = await supabaseAdmin
       .from("otp_codes")
       .select("*")
@@ -72,68 +72,50 @@ serve(async (req: Request): Promise<Response> => {
     }
 
     // Mark OTP as used
-    await supabaseAdmin.from("otp_codes").update({ used: true }).eq("id", otpData.id);
+    await supabaseAdmin
+      .from("otp_codes")
+      .update({ used: true })
+      .eq("id", otpData.id);
 
     console.log("OTP verified successfully, checking user...");
 
-    // --- Step 2: Check if user exists ---
-    const { data: userData, error: userError } = await supabaseAdmin.auth.admin.listUsers({
-      page: 1,
-      perPage: 1,
-      email,
-    });
+    // --- Step 2: Ensure user exists ---
+    const { data: userList, error: userError } =
+      await supabaseAdmin.auth.admin.listUsers({ page: 1, perPage: 1 });
 
     if (userError) {
-      console.error("Error fetching user:", userError);
+      console.error("Error fetching users:", userError);
       return new Response(
-        JSON.stringify({ error: "Failed to fetch user" }),
+        JSON.stringify({ error: "Failed to fetch users" }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } },
       );
     }
 
-    let sessionData;
+    const user = userList.users.find((u: any) => u.email === email);
 
-    if (userData?.users?.length > 0) {
-      // Existing user → generate login link
-      const { data: linkData, error: linkError } = await supabaseAdmin.auth.admin.generateLink({
-        type: "magiclink",
-        email: email,
-      });
-
-      if (linkError) {
-        console.error("Error generating magic link:", linkError);
-      } else {
-        sessionData = linkData;
-      }
-    } else {
-      // New user → create + magic link
-      const { data: newUser, error: signUpError } = await supabaseAdmin.auth.admin.createUser({
-        email,
-        password: email + Date.now().toString(),
-        email_confirm: true,
-      });
-
-      if (signUpError) {
-        console.error("Error creating user:", signUpError);
-        return new Response(
-          JSON.stringify({ error: "Failed to create user" }),
-          { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } },
-        );
-      }
-
-      console.log("User created successfully:", newUser);
-
-      const { data: linkData, error: magicLinkError } = await supabaseAdmin.auth.admin.generateLink({
-        type: "magiclink",
-        email: email,
-      });
-
-      if (!magicLinkError) {
-        sessionData = linkData;
-      }
+    if (!user) {
+      return new Response(
+        JSON.stringify({ error: "User does not exist. Please register first." }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
     }
 
-    // --- Step 3: Cleanup expired OTPs ---
+    // --- Step 3: Generate magic link for login ---
+    const { data: linkData, error: linkError } =
+      await supabaseAdmin.auth.admin.generateLink({
+        type: "magiclink",
+        email: email,
+      });
+
+    if (linkError) {
+      console.error("Error generating magic link:", linkError);
+      return new Response(
+        JSON.stringify({ error: "Failed to generate login link" }),
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
+    }
+
+    // --- Step 4: Cleanup expired OTPs ---
     await supabaseAdmin.from("otp_codes").delete().lt(
       "expires_at",
       new Date().toISOString(),
@@ -141,8 +123,8 @@ serve(async (req: Request): Promise<Response> => {
 
     return new Response(
       JSON.stringify({
-        message: "OTP verified successfully",
-        session: sessionData,
+        message: "OTP verified successfully, user logged in",
+        session: linkData,
         success: true,
       }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } },
