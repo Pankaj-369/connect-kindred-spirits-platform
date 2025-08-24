@@ -35,9 +35,14 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
-    // Check if user exists
-    const { data: userCheck } = await supabase.auth.admin.getUserByEmail(email);
-    if (!userCheck.user) {
+    // Check if user exists in profiles table
+    const { data: profileCheck } = await supabase
+      .from('profiles')
+      .select('id')
+      .eq('username', email)
+      .single();
+    
+    if (!profileCheck) {
       return new Response(
         JSON.stringify({ error: "User not found" }),
         { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
