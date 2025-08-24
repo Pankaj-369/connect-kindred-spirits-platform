@@ -35,19 +35,8 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
-    // Check if user exists in profiles table
-    const { data: profileCheck } = await supabase
-      .from('profiles')
-      .select('id')
-      .eq('username', email)
-      .single();
-    
-    if (!profileCheck) {
-      return new Response(
-        JSON.stringify({ error: "User not found" }),
-        { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
+    // Allow OTP generation for any email (removes requirement for pre-existing user)
+    // This enables both login and signup flows
 
     // Generate OTP
     const otpCode = generateOTP();

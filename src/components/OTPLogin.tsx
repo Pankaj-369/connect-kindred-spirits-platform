@@ -71,10 +71,29 @@ const OTPLogin = ({ onSuccess }: OTPLoginProps) => {
 
       if (error) throw error;
 
-      if (data.magicLink) {
+      if (data?.magicLink) {
         // Redirect to magic link for auto login
         window.location.href = data.magicLink;
       } else {
+        // Fallback: try to sign in directly
+        const { error: signInError } = await supabase.auth.signInWithPassword({
+          email,
+          password: otp // Using OTP as temporary password
+        });
+        
+        if (signInError) {
+          // If sign in fails, the user might not exist, so create account
+          const { error: signUpError } = await supabase.auth.signUp({
+            email,
+            password: email + Date.now(), // Generate a random password
+            options: {
+              emailRedirectTo: `${window.location.origin}/`,
+            }
+          });
+          
+          if (signUpError) throw signUpError;
+        }
+        
         onSuccess();
       }
     } catch (error: any) {
