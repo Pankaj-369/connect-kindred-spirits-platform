@@ -1,12 +1,9 @@
-// supabase/functions/verify-otp/index.ts
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
-// CORS
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
@@ -15,47 +12,48 @@ interface VerifyOTPRequest {
   otp: string;
 }
 
-serve(async (req: Request): Promise<Response> => {
-  // Preflight
+const handler = async (req: Request): Promise<Response> => {
+  // Handle CORS preflight requests
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
 
   if (req.method !== "POST") {
-    return json({ error: "Method Not Allowed" }, 405);
+    return new Response(
+      JSON.stringify({ error: "Method Not Allowed" }),
+      { status: 405, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+    );
   }
-
-  // Parse body safely
-  let body: VerifyOTPRequest;
-  try {
-    body = await req.json();
-  } catch {
-    return json({ error: "Invalid JSON body" }, 400);
-  }
-
-  const { email, otp } = body ?? {};
-  if (!email || !otp) {
-    return json({ error: "Email and OTP are required" }, 400);
-  }
-
-  // Env + clients
-  const supabaseUrl = Deno.env.get("SUPABASE_URL");
-  const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
-  const redirectTo = Deno.env.get("SITE_URL") || Deno.env.get("NEXT_PUBLIC_SITE_URL") || undefined; // optional
-
-  if (!supabaseUrl || !serviceRoleKey) {
-    return json({ error: "Server configuration error: missing Supabase env" }, 500);
-  }
-
-  const admin = createClient(supabaseUrl, serviceRoleKey);
 
   try {
-    // 1) Fetch a valid, unused OTP row
+    const body = await req.json();
+    const { email, otp }: VerifyOTPRequest = body;
+
+    if (!email || !otp) {
+      return new Response(
+        JSON.stringify({ error: "Email and OTP are required" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // Initialize Supabase client
+    const supabaseUrl = Deno.env.get("SUPABASE_URL");
+    const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+
+    if (!supabaseUrl || !serviceRoleKey) {
+      return new Response(
+        JSON.stringify({ error: "Server configuration error" }),
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    const supabase = createClient(supabaseUrl, serviceRoleKey);
+
+    // Check if OTP is valid
     const nowIso = new Date().toISOString();
-
-    const { data: otpRow, error: otpFetchErr } = await admin
+    const { data: otpRow, error: otpFetchErr } = await supabase
       .from("otp_codes")
-      .select("id,email,otp_code,expires_at,used")
+      .select("id, email, otp_code, expires_at, used")
       .eq("email", email)
       .eq("otp_code", otp)
       .eq("used", false)
@@ -64,74 +62,77 @@ serve(async (req: Request): Promise<Response> => {
 
     if (otpFetchErr) {
       console.error("OTP fetch error:", otpFetchErr);
-      return json({ error: "Database error while checking OTP" }, 500);
+      return new Response(
+        JSON.stringify({ error: "Database error while checking OTP" }),
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
     }
 
     if (!otpRow) {
-      return json({ error: "Invalid or expired OTP" }, 400);
+      return new Response(
+        JSON.stringify({ error: "Invalid or expired OTP" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
     }
 
-    // 2) Mark OTP as used
-    const { error: consumeErr } = await admin
+    // Mark OTP as used
+    const { error: consumeErr } = await supabase
       .from("otp_codes")
       .update({ used: true })
       .eq("id", otpRow.id);
 
     if (consumeErr) {
       console.error("OTP consume error:", consumeErr);
-      return json({ error: "Failed to consume OTP" }, 500);
+      return new Response(
+        JSON.stringify({ error: "Failed to consume OTP" }),
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
     }
 
-    // 3) Check if user exists and sign them in
-    const { data: { user }, error: getUserError } = await admin.auth.admin.getUserByEmail(email);
+    // Check if user exists
+    const { data: { user }, error: getUserError } = await supabase.auth.admin.getUserByEmail(email);
     
     if (getUserError || !user) {
-      return json({ error: "User not found. Please register first." }, 400);
+      return new Response(
+        JSON.stringify({ error: "User not found. Please register first." }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
     }
 
-    // 4) Generate a sign-in magic link for existing user
-    const { data: linkData, error: linkErr } = await admin.auth.admin.generateLink({
+    // Generate magic link for login
+    const { data: linkData, error: linkErr } = await supabase.auth.admin.generateLink({
       type: "magiclink",
-      email,
-      options: redirectTo ? { redirectTo } : undefined,
+      email: email,
     });
 
-    if (linkErr) {
+    if (linkErr || !linkData?.properties?.action_link) {
       console.error("Generate magic link error:", linkErr);
-      return json({ error: "Failed to generate login link" }, 400);
+      return new Response(
+        JSON.stringify({ error: "Failed to generate login link" }),
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
     }
 
-    // 5) Clean up expired OTPs
-    try {
-      await admin.from("otp_codes").delete().lt("expires_at", nowIso);
-    } catch (cleanupErr) {
-      console.warn("OTP cleanup warning:", cleanupErr);
-    }
+    // Clean up expired OTPs
+    await supabase.from("otp_codes").delete().lt("expires_at", nowIso);
 
-    const actionLink = linkData?.properties?.action_link ?? null;
+    console.log(`OTP verified successfully for ${email}`);
 
-    return json(
-      {
+    return new Response(
+      JSON.stringify({
         success: true,
         message: "OTP verified successfully",
-        action_link: actionLink,
-      },
-      200,
+        action_link: linkData.properties.action_link,
+      }),
+      { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
-  } catch (err: any) {
-    console.error("Unhandled verify-otp error:", err);
-    return json({ error: "Internal server error" }, 500);
+  } catch (error) {
+    console.error("Unhandled verify-otp error:", error);
+    return new Response(
+      JSON.stringify({ error: "Internal server error" }),
+      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+    );
   }
-});
+};
 
-// Helper to return JSON with CORS
-function json(payload: unknown, status = 200) {
-  return new Response(JSON.stringify(payload), {
-    status,
-    headers: {
-      ...corsHeaders,
-      "Content-Type": "application/json",
-      "Cache-Control": "no-store",
-    },
-  });
-}
+serve(handler);

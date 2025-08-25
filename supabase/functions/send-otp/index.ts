@@ -56,6 +56,7 @@ const handler = async (req: Request): Promise<Response> => {
         email,
         otp_code: otpCode,
         expires_at: new Date(Date.now() + 5 * 60 * 1000).toISOString(),
+        used: false
       });
 
     if (insertError) {
@@ -85,16 +86,18 @@ const handler = async (req: Request): Promise<Response> => {
       body: JSON.stringify({
         from: "Connect4Good <onboarding@resend.dev>",
         to: [email],
-        subject: "Your Login OTP",
+        subject: "Your Login OTP - Connect4Good",
         html: `
-          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-            <h2>Your Login OTP</h2>
-            <p>Your OTP code is:</p>
-            <div style="background-color: #f5f5f5; padding: 20px; text-align: center; margin: 20px 0;">
-              <h1 style="color: #333; font-size: 32px; margin: 0; letter-spacing: 5px;">${otpCode}</h1>
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+            <h2 style="color: #3b82f6;">Your Login OTP</h2>
+            <p>Hello,</p>
+            <p>Your one-time password (OTP) for logging into Connect4Good is:</p>
+            <div style="background-color: #f8fafc; padding: 20px; text-align: center; margin: 20px 0; border-radius: 8px; border: 2px solid #e2e8f0;">
+              <h1 style="color: #1e293b; font-size: 32px; margin: 0; letter-spacing: 5px; font-family: monospace;">${otpCode}</h1>
             </div>
-            <p>This code will expire in 5 minutes.</p>
+            <p><strong>This code will expire in 5 minutes.</strong></p>
             <p>If you didn't request this code, please ignore this email.</p>
+            <p>Best regards,<br>Connect4Good Team</p>
           </div>
         `,
       }),
@@ -103,11 +106,17 @@ const handler = async (req: Request): Promise<Response> => {
     if (!emailResponse.ok) {
       const errorText = await emailResponse.text();
       console.error("Email send failed:", errorText);
+      
+      // Delete the OTP since email failed
+      await supabase.from("otp_codes").delete().eq("email", email).eq("otp_code", otpCode);
+      
       return new Response(
         JSON.stringify({ error: "Failed to send email" }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
+
+    console.log(`OTP sent successfully to ${email}`);
 
     return new Response(
       JSON.stringify({ message: "OTP sent successfully" }),
