@@ -71,25 +71,25 @@ serve(async (req: Request): Promise<Response> => {
       return json({ error: "Invalid or expired OTP" }, 400);
     }
 
-    // 2) Atomically consume the OTP (avoid race conditions)
-    const { data: consumedRows, error: consumeErr } = await admin
+    // 2) Mark OTP as used
+    const { error: consumeErr } = await admin
       .from("otp_codes")
       .update({ used: true })
-      .eq("id", otpRow.id)
-      .eq("used", false) // ensures single-use
-      .select("id")
-      .maybeSingle();
+      .eq("id", otpRow.id);
 
     if (consumeErr) {
       console.error("OTP consume error:", consumeErr);
       return json({ error: "Failed to consume OTP" }, 500);
     }
-    if (!consumedRows) {
-      // Someone else consumed it between fetch and update
-      return json({ error: "OTP already used" }, 400);
+
+    // 3) Check if user exists and sign them in
+    const { data: { user }, error: getUserError } = await admin.auth.admin.getUserByEmail(email);
+    
+    if (getUserError || !user) {
+      return json({ error: "User not found. Please register first." }, 400);
     }
 
-    // 3) Generate a sign-in magic link (login-only; do NOT create user)
+    // 4) Generate a sign-in magic link for existing user
     const { data: linkData, error: linkErr } = await admin.auth.admin.generateLink({
       type: "magiclink",
       email,
@@ -97,29 +97,23 @@ serve(async (req: Request): Promise<Response> => {
     });
 
     if (linkErr) {
-      // If the user doesn't exist, GoTrue typically responds with an error here.
-      // We deliberately do NOT create users in this flow.
       console.error("Generate magic link error:", linkErr);
-      const msg = /not found|no user/i.test(linkErr.message || "")
-        ? "User does not exist. Please register first."
-        : "Failed to generate login link";
-      return json({ error: msg }, 400);
+      return json({ error: "Failed to generate login link" }, 400);
     }
 
-    // 4) Best-effort cleanup of expired OTPs (non-critical)
+    // 5) Clean up expired OTPs
     try {
       await admin.from("otp_codes").delete().lt("expires_at", nowIso);
     } catch (cleanupErr) {
       console.warn("OTP cleanup warning:", cleanupErr);
     }
 
-    // Return the action link so the frontend can redirect the browser to complete sign-in
     const actionLink = linkData?.properties?.action_link ?? null;
 
     return json(
       {
         success: true,
-        message: "OTP verified. Use action_link to complete sign-in.",
+        message: "OTP verified successfully",
         action_link: actionLink,
       },
       200,

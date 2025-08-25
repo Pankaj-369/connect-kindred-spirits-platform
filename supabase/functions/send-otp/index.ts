@@ -20,17 +20,12 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
-    console.log("Starting OTP generation...");
-    
     const body = await req.json();
-    console.log("Request body:", body);
-    
     const { email }: SendOTPRequest = body;
 
-    if (!email) {
-      console.error("No email provided");
+    if (!email || !email.includes('@')) {
       return new Response(
-        JSON.stringify({ error: "Email is required" }),
+        JSON.stringify({ error: "Valid email is required" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
@@ -40,7 +35,6 @@ const handler = async (req: Request): Promise<Response> => {
     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
     
     if (!supabaseUrl || !supabaseKey) {
-      console.error("Missing Supabase configuration");
       return new Response(
         JSON.stringify({ error: "Server configuration error" }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -48,21 +42,12 @@ const handler = async (req: Request): Promise<Response> => {
     }
     
     const supabase = createClient(supabaseUrl, supabaseKey);
-    console.log("Supabase client initialized");
 
     // Generate OTP
     const otpCode = generateOTP();
-    console.log("Generated OTP code:", otpCode);
 
     // Clean up old OTPs for this email
-    const { error: deleteError } = await supabase
-      .from("otp_codes")
-      .delete()
-      .eq("email", email);
-
-    if (deleteError) {
-      console.error("Error deleting old OTPs:", deleteError);
-    }
+    await supabase.from("otp_codes").delete().eq("email", email);
 
     // Store OTP in database
     const { error: insertError } = await supabase
@@ -76,24 +61,19 @@ const handler = async (req: Request): Promise<Response> => {
     if (insertError) {
       console.error("Error storing OTP:", insertError);
       return new Response(
-        JSON.stringify({ error: "Failed to generate OTP", details: insertError.message }),
+        JSON.stringify({ error: "Failed to generate OTP" }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    console.log("OTP stored successfully");
-
     // Check if Resend API key exists
     const resendApiKey = Deno.env.get("RESEND_API_KEY");
     if (!resendApiKey) {
-      console.error("RESEND_API_KEY not found");
       return new Response(
         JSON.stringify({ error: "Email service not configured" }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
-
-    console.log("Resend API key found, sending email...");
 
     // Send OTP via email using fetch
     const emailResponse = await fetch("https://api.resend.com/emails", {
@@ -105,7 +85,7 @@ const handler = async (req: Request): Promise<Response> => {
       body: JSON.stringify({
         from: "Connect4Good <onboarding@resend.dev>",
         to: [email],
-        subject: "Your OTP for Login",
+        subject: "Your Login OTP",
         html: `
           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
             <h2>Your Login OTP</h2>
@@ -115,7 +95,6 @@ const handler = async (req: Request): Promise<Response> => {
             </div>
             <p>This code will expire in 5 minutes.</p>
             <p>If you didn't request this code, please ignore this email.</p>
-            <p>Best regards,<br>Connect4Good Team</p>
           </div>
         `,
       }),
@@ -123,15 +102,12 @@ const handler = async (req: Request): Promise<Response> => {
 
     if (!emailResponse.ok) {
       const errorText = await emailResponse.text();
-      console.error("Resend API error:", errorText);
+      console.error("Email send failed:", errorText);
       return new Response(
-        JSON.stringify({ error: "Failed to send OTP email", details: errorText }),
+        JSON.stringify({ error: "Failed to send email" }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
-
-    const emailResult = await emailResponse.json();
-    console.log("Email sent successfully:", emailResult);
 
     return new Response(
       JSON.stringify({ message: "OTP sent successfully" }),
@@ -140,7 +116,7 @@ const handler = async (req: Request): Promise<Response> => {
   } catch (error) {
     console.error("Error in send-otp function:", error);
     return new Response(
-      JSON.stringify({ error: "Internal server error", details: error.message }),
+      JSON.stringify({ error: "Internal server error" }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }
