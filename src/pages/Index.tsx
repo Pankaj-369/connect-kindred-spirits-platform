@@ -1,22 +1,22 @@
 
-import HeroSection from '@/components/HeroSection';
-import FeatureSection from '@/components/FeatureSection';
+import EnhancedHeroSection from '@/components/EnhancedHeroSection';
+import InteractiveFeatureCards from '@/components/InteractiveFeatureCards';
 import OpportunitySection from '@/components/OpportunitySection';
 import ImpactSection from '@/components/ImpactSection';
 import NGOSpotlightSection from '@/components/NGOSpotlightSection';
-import TestimonialSection from '@/components/TestimonialSection';
+import TestimonialCarousel from '@/components/TestimonialCarousel';
 import CTASection from '@/components/CTASection';
 
 const Index = () => {
   return (
     <div className="min-h-screen flex flex-col">
       <main>
-        <HeroSection />
-        <FeatureSection />
+        <EnhancedHeroSection />
+        <InteractiveFeatureCards />
         <OpportunitySection />
         <ImpactSection />
         <NGOSpotlightSection />
-        <TestimonialSection />
+        <TestimonialCarousel />
         <CTASection />
       </main>
     </div>
