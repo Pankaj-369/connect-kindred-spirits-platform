@@ -1,81 +1,12 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import OpportunityCard from './OpportunityCard';
-import DriveApplicationForm from './DriveApplicationForm';
 import { Button } from './ui/button';
 import { Search, ArrowRight } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
-
-// Sample data for opportunities (now representing drives from the database)
-const opportunities = [
-  {
-    id: '123e4567-e89b-12d3-a456-426614174000', // Using UUID format
-    title: 'Beach Cleanup Drive',
-    organization: 'Ocean Conservancy',
-    location: 'Miami, FL',
-    date: 'May 15, 2025',
-    spots: 12,
-    image: 'https://images.unsplash.com/photo-1618477461853-cf177663618e?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
-    category: 'Environment',
-    organizationId: '201'
-  },
-  {
-    id: '223e4567-e89b-12d3-a456-426614174001', // Using UUID format
-    title: 'Homeless Shelter Assistance',
-    organization: 'City Hope Foundation',
-    location: 'Portland, OR',
-    date: 'May 20, 2025',
-    spots: 5,
-    image: 'https://images.unsplash.com/photo-1593113630400-ea4288922497?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
-    category: 'Community',
-    organizationId: '202'
-  },
-  {
-    id: '323e4567-e89b-12d3-a456-426614174002', // Using UUID format
-    title: 'After-School Tutoring',
-    organization: 'Bright Futures',
-    location: 'Chicago, IL',
-    date: 'Ongoing',
-    spots: 8,
-    image: 'https://images.unsplash.com/photo-1509062522246-3755977927d7?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
-    category: 'Education',
-    organizationId: '203'
-  },
-  {
-    id: '423e4567-e89b-12d3-a456-426614174003', // Using UUID format
-    title: 'Wildlife Conservation Project',
-    organization: 'Wildlife Protection Society',
-    location: 'Denver, CO',
-    date: 'June 5, 2025',
-    spots: 6,
-    image: 'https://images.unsplash.com/photo-1472396961693-142e6e269027?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
-    category: 'Animals',
-    organizationId: '104'
-  },
-  {
-    id: '523e4567-e89b-12d3-a456-426614174004', // Using UUID format
-    title: 'Food Bank Assistant',
-    organization: 'Community Food Network',
-    location: 'Austin, TX',
-    date: 'Every Saturday',
-    spots: 15,
-    image: 'https://images.unsplash.com/photo-1593113616828-7ad829b01c8b?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
-    category: 'Hunger Relief',
-    organizationId: '105'
-  },
-  {
-    id: '623e4567-e89b-12d3-a456-426614174005', // Using UUID format
-    title: 'Senior Home Visit Program',
-    organization: 'Elder Care Alliance',
-    location: 'Seattle, WA',
-    date: 'Flexible',
-    spots: 10,
-    image: 'https://images.unsplash.com/photo-1576765608866-5b51037ed7f4?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
-    category: 'Healthcare',
-    organizationId: '106'
-  }
-];
+import { supabase } from '@/integrations/supabase/client';
+import CampaignApplicationForm from './CampaignApplicationForm';
 
 const categories = ['All', 'Environment', 'Community', 'Education', 'Animals', 'Hunger Relief', 'Healthcare'];
 
@@ -84,10 +15,65 @@ const OpportunitySection = () => {
   const { isAuthenticated } = useAuth();
   const [activeFilter, setActiveFilter] = useState('All');
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedDrive, setSelectedDrive] = useState<any | null>(null);
+  const [selectedCampaign, setSelectedCampaign] = useState<any | null>(null);
   const [isApplicationFormOpen, setIsApplicationFormOpen] = useState(false);
+  const [campaigns, setCampaigns] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const filteredOpportunities = opportunities.filter(opportunity => {
+  useEffect(() => {
+    const fetchCampaigns = async () => {
+      try {
+        setIsLoading(true);
+        const { data: campaignsData, error } = await supabase
+          .from('campaigns')
+          .select('*')
+          .order('created_at', { ascending: false })
+          .limit(6);
+
+        if (error) throw error;
+
+        if (!campaignsData) {
+          setCampaigns([]);
+          return;
+        }
+
+        // Fetch NGO profiles for all campaigns
+        const ngoIds = [...new Set(campaignsData.map(c => c.ngo_id))];
+        const { data: profiles } = await supabase
+          .from('profiles')
+          .select('id, ngo_name, full_name, username')
+          .in('id', ngoIds);
+
+        const profileMap = new Map(profiles?.map(p => [p.id, p]) || []);
+
+        const formattedCampaigns = campaignsData.map(campaign => {
+          const profile = profileMap.get(campaign.ngo_id);
+          return {
+            id: campaign.id,
+            title: campaign.title,
+            organization: profile?.ngo_name || profile?.full_name || profile?.username || 'Unknown Organization',
+            location: campaign.location || 'Location TBD',
+            date: campaign.date ? new Date(campaign.date).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) : 'Date TBD',
+            spots: 10, // Default since we don't have spots in DB
+            image: campaign.image_url || 'https://images.unsplash.com/photo-1559027615-cd4628902d4a?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
+            category: campaign.category || 'General',
+            organizationId: campaign.ngo_id,
+          };
+        });
+
+        setCampaigns(formattedCampaigns);
+      } catch (error) {
+        console.error('Error fetching campaigns:', error);
+        setCampaigns([]);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchCampaigns();
+  }, []);
+
+  const filteredOpportunities = campaigns.filter(opportunity => {
     // Filter by category
     if (activeFilter !== 'All' && opportunity.category !== activeFilter) {
       return false;
@@ -102,19 +88,31 @@ const OpportunitySection = () => {
     return true;
   });
 
-  const handleApply = (drive: any) => {
+  const handleApply = (campaign: any) => {
     if (!isAuthenticated) {
-      navigate('/auth', { state: { returnTo: '/opportunities' } });
+      navigate('/auth', { state: { returnTo: '/' } });
       return;
     }
-    setSelectedDrive(drive);
+    setSelectedCampaign(campaign);
     setIsApplicationFormOpen(true);
   };
 
   const handleCloseApplicationForm = () => {
     setIsApplicationFormOpen(false);
-    setSelectedDrive(null);
+    setSelectedCampaign(null);
   };
+
+  if (isLoading) {
+    return (
+      <section className="py-16 bg-gray-50">
+        <div className="container mx-auto px-4">
+          <div className="flex justify-center items-center h-64">
+            <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-connect-primary"></div>
+          </div>
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section className="py-16 bg-gray-50">
@@ -188,10 +186,10 @@ const OpportunitySection = () => {
       </div>
 
       {/* Application Form Dialog */}
-      {selectedDrive && (
-        <DriveApplicationForm
-          driveId={selectedDrive.id}
-          driveTitle={selectedDrive.title}
+      {selectedCampaign && (
+        <CampaignApplicationForm
+          campaignId={selectedCampaign.id}
+          campaignTitle={selectedCampaign.title}
           isOpen={isApplicationFormOpen}
           onClose={handleCloseApplicationForm}
         />
