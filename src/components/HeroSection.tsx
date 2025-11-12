@@ -27,21 +27,25 @@ const HeroSection = () => {
           <div className="flex flex-col sm:flex-row gap-4 justify-center animate-fade-in" style={{ animationDelay: '0.5s' }}>
             <Button 
               size="lg" 
-              className="bg-connect-primary hover:bg-connect-primary/90 text-lg px-8 py-6"
-              onClick={() => navigate('/opportunities')}
+              className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-lg px-8 py-6 shadow-xl hover:shadow-2xl transition-all duration-300 hover:-translate-y-1"
+              onClick={() => navigate('/ai-matching')}
             >
-              Find Opportunities
+              <span className="mr-2">✨</span>
+              AI Smart Match
               <ArrowRight className="ml-2 h-5 w-5" />
             </Button>
             <Button 
               size="lg" 
-              variant="outline" 
-              className="border-connect-secondary text-connect-secondary hover:bg-connect-secondary/10 text-lg px-8 py-6"
-              onClick={() => navigate('/auth')}
+              className="bg-connect-primary hover:bg-connect-primary/90 text-lg px-8 py-6"
+              onClick={() => navigate('/opportunities')}
             >
-              For NGOs
+              Browse All Opportunities
             </Button>
           </div>
+          
+          <p className="text-sm text-gray-500 mt-4 animate-fade-in" style={{ animationDelay: '0.6s' }}>
+            🚀 <span className="font-semibold">New:</span> Let AI find your perfect volunteer match in seconds
+          </p>
           
           <div className="flex justify-center items-center gap-6 mt-12 animate-fade-in" style={{ animationDelay: '0.7s' }}>
             <div className="text-center">

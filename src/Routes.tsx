@@ -11,6 +11,7 @@ import VolunteerManagement from './pages/VolunteerManagement';
 import Opportunities from './pages/Opportunities';
 import About from './pages/About';
 import Dashboard from './pages/Dashboard';
+import AIMatching from './pages/AIMatching';
 import AuthGuard from './components/AuthGuard';
 import PublicGuard from './components/PublicGuard';
 import Layout from './components/Layout';
@@ -23,6 +24,7 @@ const Routes = () => {
         <Route path="/" element={<Index />} />
         <Route path="/about" element={<About />} />
         <Route path="/opportunities" element={<Opportunities />} />
+        <Route path="/ai-matching" element={<AIMatching />} />
         <Route path="/ngo-list" element={<NGOList />} />
         <Route path="/ngo/:id" element={<NGODetail />} />
         

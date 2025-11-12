@@ -84,6 +84,24 @@ const Navigation = () => {
             </NavLink>
             
             <NavLink
+              to="/ai-matching"
+              className={({ isActive }) =>
+                cn(
+                  "px-3 py-2 rounded-md text-sm font-medium transition-colors flex items-center gap-1",
+                  isActive
+                    ? "bg-gradient-to-r from-purple-600 to-pink-600 text-white"
+                    : "text-gray-600 hover:bg-gradient-to-r hover:from-purple-50 hover:to-pink-50"
+                )
+              }
+              onClick={closeMenu}
+            >
+              <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-gradient-to-r from-purple-100 to-pink-100 text-[10px] font-bold text-purple-700">
+                ✨ AI
+              </span>
+              Smart Match
+            </NavLink>
+            
+            <NavLink
               to="/ngo-list"
               className={({ isActive }) =>
                 cn(
@@ -282,6 +300,24 @@ const Navigation = () => {
               onClick={closeMenu}
             >
               Opportunities
+            </NavLink>
+            
+            <NavLink
+              to="/ai-matching"
+              className={({ isActive }) =>
+                cn(
+                  "block px-3 py-2 rounded-md text-base font-medium flex items-center gap-2",
+                  isActive
+                    ? "bg-gradient-to-r from-purple-600 to-pink-600 text-white"
+                    : "text-gray-600 hover:bg-gradient-to-r hover:from-purple-50 hover:to-pink-50"
+                )
+              }
+              onClick={closeMenu}
+            >
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-gradient-to-r from-purple-100 to-pink-100 text-[10px] font-bold text-purple-700">
+                ✨ AI
+              </span>
+              Smart Match
             </NavLink>
             
             <NavLink
