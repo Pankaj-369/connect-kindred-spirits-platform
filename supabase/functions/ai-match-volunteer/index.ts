@@ -28,17 +28,22 @@ serve(async (req) => {
     // Fetch all active campaigns
     const { data: campaigns, error: campaignsError } = await supabaseClient
       .from("campaigns")
-      .select(`
-        *,
-        profiles:ngo_id (
-          ngo_name,
-          full_name,
-          username
-        )
-      `)
+      .select("*")
       .order("created_at", { ascending: false });
 
     if (campaignsError) throw campaignsError;
+
+    // Fetch NGO profiles separately
+    const ngoIds = [...new Set(campaigns?.map(c => c.ngo_id) || [])];
+    const { data: profiles, error: profilesError } = await supabaseClient
+      .from("profiles")
+      .select("id, ngo_name, full_name, username")
+      .in("id", ngoIds);
+
+    if (profilesError) throw profilesError;
+
+    // Create a map of profiles for easy lookup
+    const profileMap = new Map(profiles?.map(p => [p.id, p]) || []);
 
     if (!campaigns || campaigns.length === 0) {
       return new Response(
@@ -50,15 +55,17 @@ serve(async (req) => {
     // Prepare campaign data for AI
     const campaignsText = campaigns
       .map(
-        (c, idx) =>
-          `Campaign ${idx + 1}:
+        (c, idx) => {
+          const profile = profileMap.get(c.ngo_id);
+          return `Campaign ${idx + 1}:
 - ID: ${c.id}
 - Title: ${c.title}
 - Category: ${c.category || "General"}
 - Location: ${c.location || "Not specified"}
 - Description: ${c.description || "No description"}
-- NGO: ${c.profiles?.ngo_name || c.profiles?.full_name || "Unknown"}
-`
+- NGO: ${profile?.ngo_name || profile?.full_name || "Unknown"}
+`;
+        }
       )
       .join("\n");
 
@@ -135,6 +142,8 @@ Return ONLY a valid JSON array with the top 5 best matches in this exact format:
         const campaign = campaigns.find((c) => c.id === match.campaignId);
         if (!campaign) return null;
 
+        const profile = profileMap.get(campaign.ngo_id);
+
         return {
           ...match,
           campaign: {
@@ -146,10 +155,7 @@ Return ONLY a valid JSON array with the top 5 best matches in this exact format:
             date: campaign.date,
             image_url: campaign.image_url,
             ngo_id: campaign.ngo_id,
-            ngoName:
-              campaign.profiles?.ngo_name ||
-              campaign.profiles?.full_name ||
-              "Unknown NGO",
+            ngoName: profile?.ngo_name || profile?.full_name || "Unknown NGO",
           },
         };
       })
